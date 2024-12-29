@@ -1,6 +1,6 @@
 /TrackML_100_events
-/TrackML_out
+/trackml_out
 /MPD_dataset/MPD_events
 /MPD_dataset/TpcSampaData_1000_new.root
+/mpd_out
 /out
-/.vscode

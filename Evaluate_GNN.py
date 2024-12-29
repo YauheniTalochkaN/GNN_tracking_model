@@ -112,7 +112,7 @@ def main():
     n_iters = parameters['n_iters']
 
     # Load data
-    graph_files = [os.path.join(input_dir, f'event0000010{evtid:02}_section{section_id:02}_graph.npz') for evtid, section_id in zip(range(n_files), range(section_num))]
+    graph_files = [os.path.join(input_dir, f'event_{evtid}_section_{section_id}_graph.npz') for evtid, section_id in zip(range(n_files), range(section_num))]
     graphs = [load_graph_from_npz(file) for file in graph_files]
     dataset = [convert_nx_to_pyg_data(graph) for graph in graphs]
 

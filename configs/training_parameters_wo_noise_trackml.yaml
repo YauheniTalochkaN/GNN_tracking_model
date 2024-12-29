@@ -1,0 +1,14 @@
+input_dir: ./trackml_out/train_graphs_wo_noise
+output_dir: ./trackml_out/train_logs_wo_noise
+n_files: 100
+section_num: 16
+test_size: 0.2
+epoch_num: 1000
+batch_size: 4
+n_iters: 8
+learning_rate: 0.001
+step_size: 320
+gamma: 0.97
+pos_weight: 1
+neg_weight: 1.1
+time_lapse: 10
