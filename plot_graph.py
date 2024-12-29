@@ -37,8 +37,11 @@ def plot_graph(G):
     pos = get_pos(G) 
     plt.close('all')
     fig, ax = plt.subplots(figsize=(10, 10), constrained_layout=True)
-    widths = [1.0 if color == 'r' else 0.7 for color in edge_colors]
-    nx.draw(G, pos, node_color='black', edge_color=edge_colors, width=widths, with_labels=False, node_size=1, ax=ax, arrows=False, alpha=edge_alpha) 
+    widths = [2.0 if color == 'r' else 1.5 for color in edge_colors]
+
+    nx.draw_networkx_nodes(G, pos, node_color='black', node_size=5, alpha=1.0, ax=ax)
+    nx.draw_networkx_edges(G, pos, edge_color=edge_colors, width=widths, alpha=edge_alpha, ax=ax, arrows=False)
+
     plt.show()
 
 def plot3D_networkx(G, animate=False, only_true=False):
@@ -54,14 +57,14 @@ def plot3D_networkx(G, animate=False, only_true=False):
     fig = plt.figure(figsize=(13, 13))
     ax = fig.add_subplot(111, projection='3d')
 
-    ax.scatter(x, y, z, s=5, c='black')
+    ax.scatter(x, y, z, s=3, c='black')
 
     for iedge,edge in enumerate(G.edges(data=True)):
         p1 = G.nodes[edge[0]]['pos'][:3]
         p2 = G.nodes[edge[1]]['pos'][:3]
         col = 'green'
         alpha = 1
-        linewidth = 1
+        linewidth = 2
         if int(edge[2]['label']) != 1:
             col = 'grey'
             alpha = 0.3
@@ -88,7 +91,7 @@ def plot3D_networkx(G, animate=False, only_true=False):
             ax.view_init(elev=30., azim=angle)
             return fig,
 
-        angle = np.linspace(0, 360, 240, endpoint=False)
+        angle = np.linspace(0, 360, 360)
         ani = FuncAnimation(fig, animate, angle, interval=150, blit=True)
 
         ani.save('3D_graph_animation.gif', writer=PillowWriter(fps=30))
