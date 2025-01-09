@@ -168,8 +168,9 @@ def process_func(evtid, input_dir, output_dir, phi_edges, eta_edges, num_rows, n
         l = np.arange(num_rows)
         row_pairs = np.stack([l[:-1], l[1:]], axis=1)
 
-        true_track_segments_number = 0
-        true_edge_number = 0
+        #true_track_segments_number = 0
+        #true_edge_number = 0
+        #filtered_track_ids = set()
 
         # Loop over row pairs and construct segments
         for section_id, hits in enumerate(hits_sections):
@@ -205,7 +206,7 @@ def process_func(evtid, input_dir, output_dir, phi_edges, eta_edges, num_rows, n
                     count_hits2 = len(filtered_hits2[filtered_hits2['track_id'] == track_id])
                     counts += count_hits1 * count_hits2
                 
-                true_track_segments_number += counts
+                #true_track_segments_number += counts
 
                 # Construct the segments
                 segments.append(select_segments(hits1, hits2, phi_slope_max, z0_max))
@@ -220,7 +221,8 @@ def process_func(evtid, input_dir, output_dir, phi_edges, eta_edges, num_rows, n
                 edge_lable = 0
                 if hits.loc[index1, 'track_id'] == hits.loc[index2, 'track_id'] and hits.loc[index1, 'pt'] >= pt_min:
                     edge_lable = 1
-                    true_edge_number += 1
+                    #true_edge_number += 1
+                    #filtered_track_ids.add(hits.loc[index1, 'track_id'])
                 G.add_edge(index1, index2, features=get_edge_features(G.nodes[index1]['pos'], G.nodes[index2]['pos']), label=edge_lable)
 
             # Save graph
@@ -228,7 +230,8 @@ def process_func(evtid, input_dir, output_dir, phi_edges, eta_edges, num_rows, n
                 os.makedirs(output_dir)
             save_graph_to_npz(G, output_dir + f'/event_{evtid}_section_{section_id}_graph.npz')
         
-        print(f"Filter efficiency: {true_edge_number/true_track_segments_number * 100:.2f}")
+        #print(f"Filter efficiency: {true_edge_number/(true_track_segments_number + 1e-8) * 100:.2f}")
+        #print(f'Fraction of tracks: {len(filtered_track_ids)/(len(set(hits_df[hits_df['pt'] >= pt_min]['track_id'])) + 1e-8) * 100:.2f}')
 
 def main():
     # Get args

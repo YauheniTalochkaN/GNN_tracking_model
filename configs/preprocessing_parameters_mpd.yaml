@@ -1,10 +1,10 @@
 input_dir: ./MPD_dataset/MPD_events
 output_dir: ./mpd_out/train_graphs
-n_files: 1000
+n_files: 100
 
 selection:
     phi_slope_max: 0.005
-    z0_max: 100
+    z0_max: 300
     pt_min: 0.2
     n_phi_sections: 4
     n_eta_sections: 1
