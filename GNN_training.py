@@ -18,7 +18,7 @@ from torch_geometric.nn import MessagePassing
 def parse_args():
     parser = argparse.ArgumentParser('prepare.py')
     add_arg = parser.add_argument
-    add_arg('config', nargs='?', default='configs/training_parameters.yaml')
+    add_arg('config', nargs='?', default='configs/training_parameters_mpd.yaml')
     return parser.parse_args()
 
 def load_graph_from_npz(filename):
@@ -82,19 +82,32 @@ class CustomMLP(torch.nn.Module):
 class CustomWeightedGATConv(MessagePassing):
     def __init__(self, node_hidden_dim, hidden_dims, output_dim, edge_hidden_dim, node_feature_dim, activation=torch.nn.Tanh(), end_activation=None, dropout=torch.nn.Dropout(0.1)):
         super(CustomWeightedGATConv, self).__init__(aggr='add')
-        self.mlp = CustomMLP(2 * node_hidden_dim + node_feature_dim + edge_hidden_dim, hidden_dims, output_dim, activation, end_activation, dropout)
+        self.mlp = CustomMLP(3 * node_hidden_dim + node_feature_dim + 2 * edge_hidden_dim, hidden_dims, output_dim, activation, end_activation, dropout)
 
-    def forward(self, x, edge_index, edge_attr, edge_weight, initial_x):
-        # Прямой проход
-        return self.propagate(edge_index, x=x, edge_attr=edge_attr, edge_weight=edge_weight, initial_x=initial_x)
+    def forward(self, x, edge_index, edge_attr, edge_weight, initial_x):        
+        # Первый шаг агрегации (1-hop)
+        one_hop_out = self.propagate(edge_index, x=x, y=x, edge_attr=edge_attr, edge_weight=edge_weight, hop=1)
 
-    def message(self, x_j, edge_attr, edge_weight):
+        # Второй шаг агрегации (2-hop), используя результаты первого шага
+        two_hop_out = self.propagate(edge_index, x=one_hop_out, y=x, edge_attr=edge_attr, edge_weight=edge_weight, hop=2)
+
+        # Передаем результаты в update для финального объединения
+        return self.final_update(x=x, one_hop_out=one_hop_out, two_hop_out=two_hop_out, initial_x=initial_x)
+
+    def message(self, x_j, y_i, edge_attr, edge_weight, hop):
         # Умножаем сообщения на веса рёбер и добавляем особенности рёбер
-        return edge_weight.view(-1, 1) * torch.cat([x_j, edge_attr], dim=-1)
+        if hop == 1:
+            return edge_weight.view(-1, 1) * torch.cat([x_j, edge_attr], dim=-1)
+        elif hop == 2:
+            return x_j - torch.cat([y_i, edge_attr], dim=-1)
 
-    def update(self, aggr_out, x, initial_x):
+    def update(self, aggr_out):
+        # "Пустой" update, просто возвращаем то, что пришло:
+        return aggr_out
+    
+    def final_update(self, x, one_hop_out, two_hop_out, initial_x):
         # Объединяем агрегированные особенности соседей с собственными особенностями узлов
-        out = torch.cat([x, initial_x, aggr_out], dim=-1)
+        out = torch.cat([x, initial_x, one_hop_out, two_hop_out], dim=-1)
         # Пропускаем через MLP
         return self.mlp(out)
 

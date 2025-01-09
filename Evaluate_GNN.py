@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 def parse_args():
     parser = argparse.ArgumentParser('prepare.py')
     add_arg = parser.add_argument
-    add_arg('config', nargs='?', default='configs/training_parameters.yaml')
+    add_arg('config', nargs='?', default='configs/training_parameters_mpd.yaml')
     return parser.parse_args()
 
 # Evaluate metrics

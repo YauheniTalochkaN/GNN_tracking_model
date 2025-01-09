@@ -128,7 +128,7 @@ def parse_args():
     parser = argparse.ArgumentParser('prepare.py')
     add_arg = parser.add_argument
     add_arg('graph_file')
-    add_arg('config', nargs='?', default='configs/training_parameters.yaml')
+    add_arg('config', nargs='?', default='configs/training_parameters_mpd.yaml')
     add_arg('--threshold', type=float, default=0.5)
     add_arg('--animate', type=str, default='False')
     add_arg('--only_true', type=str, default='False')

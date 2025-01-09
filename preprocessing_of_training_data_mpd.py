@@ -168,6 +168,9 @@ def process_func(evtid, input_dir, output_dir, phi_edges, eta_edges, num_rows, n
         l = np.arange(num_rows)
         row_pairs = np.stack([l[:-1], l[1:]], axis=1)
 
+        true_track_segments_number = 0
+        true_edge_number = 0
+
         # Loop over row pairs and construct segments
         for section_id, hits in enumerate(hits_sections):
             # Make graph
@@ -189,6 +192,21 @@ def process_func(evtid, input_dir, output_dir, phi_edges, eta_edges, num_rows, n
                     logging.info(f'Skipping empty row: {exc}')
                     continue
 
+                filtered_hits1 = hits1[hits1['pt'] >= pt_min]
+                filtered_hits2 = hits2[hits2['pt'] >= pt_min]
+                
+                # Поиск пересечения track_id
+                common_track_ids = set(filtered_hits1['track_id']).intersection(set(filtered_hits2['track_id']))
+                
+                # Подсчет количества комбинаций строк
+                counts = 0
+                for track_id in common_track_ids:
+                    count_hits1 = len(filtered_hits1[filtered_hits1['track_id'] == track_id])
+                    count_hits2 = len(filtered_hits2[filtered_hits2['track_id'] == track_id])
+                    counts += count_hits1 * count_hits2
+                
+                true_track_segments_number += counts
+
                 # Construct the segments
                 segments.append(select_segments(hits1, hits2, phi_slope_max, z0_max))
 
@@ -200,14 +218,17 @@ def process_func(evtid, input_dir, output_dir, phi_edges, eta_edges, num_rows, n
                 index1 = row['index_1']
                 index2 = row['index_2']
                 edge_lable = 0
-                if hits.loc[index1, 'track_id'] == hits.loc[index2, 'track_id'] and hits.loc[index1, 'pt'] > pt_min:
+                if hits.loc[index1, 'track_id'] == hits.loc[index2, 'track_id'] and hits.loc[index1, 'pt'] >= pt_min:
                     edge_lable = 1
+                    true_edge_number += 1
                 G.add_edge(index1, index2, features=get_edge_features(G.nodes[index1]['pos'], G.nodes[index2]['pos']), label=edge_lable)
 
             # Save graph
             if not os.path.exists(output_dir):
                 os.makedirs(output_dir)
             save_graph_to_npz(G, output_dir + f'/event_{evtid}_section_{section_id}_graph.npz')
+        
+        print(f"Filter efficiency: {true_edge_number/true_track_segments_number * 100:.2f}")
 
 def main():
     # Get args
@@ -229,13 +250,15 @@ def main():
     n_eta_sections = selection['n_eta_sections']
     eta_range = selection['eta_range']
     num_rows = selection['num_rows']
+    rmax = selection['rmax']
+    zmax = selection['zmax']
     
     phi_range = [-np.pi, np.pi]
     phi_edges = np.linspace(*phi_range, num=n_phi_sections+1)
     eta_edges = np.linspace(*eta_range, num=n_eta_sections+1)
 
     # Parameters of feature nodes normalization
-    node_feature_scale = np.array([124., np.pi / n_phi_sections, 170.])
+    node_feature_scale = np.array([rmax, np.pi / n_phi_sections, zmax])
 
     # Process input files with a worker pool
     with mp.Pool(processes=args.j) as pool: 
