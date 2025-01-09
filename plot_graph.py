@@ -39,7 +39,7 @@ def plot_graph(G):
     fig, ax = plt.subplots(figsize=(10, 10), constrained_layout=True)
     widths = [2.0 if color == 'r' else 1.5 for color in edge_colors]
 
-    nx.draw_networkx_nodes(G, pos, node_color='black', node_size=5, alpha=1.0, ax=ax)
+    nx.draw_networkx_nodes(G, pos, node_color='black', node_size=3, alpha=1.0, ax=ax)
     nx.draw_networkx_edges(G, pos, edge_color=edge_colors, width=widths, alpha=edge_alpha, ax=ax, arrows=False)
 
     plt.show()
