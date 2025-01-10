@@ -168,9 +168,7 @@ def process_func(evtid, input_dir, output_dir, phi_edges, eta_edges, num_rows, n
         l = np.arange(num_rows)
         row_pairs = np.stack([l[:-1], l[1:]], axis=1)
 
-        #true_track_segments_number = 0
-        #true_edge_number = 0
-        #filtered_track_ids = set()
+        filtered_tracks = dict()
 
         # Loop over row pairs and construct segments
         for section_id, hits in enumerate(hits_sections):
@@ -205,8 +203,6 @@ def process_func(evtid, input_dir, output_dir, phi_edges, eta_edges, num_rows, n
                     count_hits1 = len(filtered_hits1[filtered_hits1['track_id'] == track_id])
                     count_hits2 = len(filtered_hits2[filtered_hits2['track_id'] == track_id])
                     counts += count_hits1 * count_hits2
-                
-                #true_track_segments_number += counts
 
                 # Construct the segments
                 segments.append(select_segments(hits1, hits2, phi_slope_max, z0_max))
@@ -214,25 +210,35 @@ def process_func(evtid, input_dir, output_dir, phi_edges, eta_edges, num_rows, n
             # Combine segments from all row pairs
             segments = pd.concat(segments)
 
+            last_index = segments.index[-1]
+
             # Add edges to the graph
-            for _, row in segments.iterrows():
+            for idx, row in segments.iterrows():
                 index1 = row['index_1']
                 index2 = row['index_2']
                 edge_lable = 0
                 if hits.loc[index1, 'track_id'] == hits.loc[index2, 'track_id'] and hits.loc[index1, 'pt'] >= pt_min:
                     edge_lable = 1
-                    #true_edge_number += 1
-                    #filtered_track_ids.add(hits.loc[index1, 'track_id'])
+                    filtered_tracks.setdefault(hits.loc[index1, 'track_id'], set()).add(hits.loc[index1, 'row_id'])
+                    if idx == last_index:
+                        filtered_tracks.setdefault(hits.loc[index2, 'track_id'], set()).add(hits.loc[index2, 'row_id'])
                 G.add_edge(index1, index2, features=get_edge_features(G.nodes[index1]['pos'], G.nodes[index2]['pos']), label=edge_lable)
 
             # Save graph
             if not os.path.exists(output_dir):
                 os.makedirs(output_dir)
             save_graph_to_npz(G, output_dir + f'/event_{evtid}_section_{section_id}_graph.npz')
-        
-        #print(f"Filter efficiency: {true_edge_number/(true_track_segments_number + 1e-8) * 100:.2f}")
-        #print(f'Fraction of tracks: {len(filtered_track_ids)/(len(set(hits_df[hits_df['pt'] >= pt_min]['track_id'])) + 1e-8) * 100:.2f}')
 
+        filtered_track_id_groups = hits_df[hits_df['pt'] >= pt_min].groupby('track_id')
+
+        av_eff = 0
+        for key in filtered_tracks:
+            av_eff += len(filtered_tracks[key]) / len(set(filtered_track_id_groups.get_group(key)['row_id']))
+
+        av_eff /= len(filtered_tracks.keys()) + 1e-8
+        
+        print(f'Filter efficiency: {av_eff * 100:.2f}')
+        
 def main():
     # Get args
     args = parse_args()
