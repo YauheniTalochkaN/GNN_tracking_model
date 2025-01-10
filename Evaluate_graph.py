@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import time
 import yaml
 import networkx as nx
 import numpy as np
@@ -15,6 +16,7 @@ from matplotlib.animation import FuncAnimation, PillowWriter
 
 # Evaluate metrics
 def evaluate(model, loader, device, threshold=0.5):
+    start_time = time.time()
     model.eval()
     all_true_labels = []
     all_pred_labels = []
@@ -39,6 +41,8 @@ def evaluate(model, loader, device, threshold=0.5):
     efficiency = true_positive / (true_positive + false_negative) if (true_positive + false_negative) > 0 else 0
 
     print(f'Accuracy: {accuracy:.4f}, Purity: {purity:.4f}, Efficiency: {efficiency:.4f}')
+
+    print(f"Spent time: {time.time() - start_time:.6f} s")
     
     return all_pred_labels
 

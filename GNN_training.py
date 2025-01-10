@@ -50,7 +50,7 @@ def convert_nx_to_pyg_data(G):
     return Data(x=x, edge_index=edge_index, edge_attr=edge_attr, y=edge_labels)
 
 class CustomMLP(torch.nn.Module):
-    def __init__(self, input_size, hidden_sizes, output_size, activation=torch.nn.Tanh(), end_activation=None, dropout=torch.nn.Dropout(0.1), use_layer_norm=True):
+    def __init__(self, input_size, hidden_sizes, output_size, activation=torch.nn.Tanh(), end_activation=None, dropout=torch.nn.Dropout(0.15), use_layer_norm=True):
         super(CustomMLP, self).__init__()
         layers = []
         # Добавляем первый скрытый слой
@@ -80,7 +80,7 @@ class CustomMLP(torch.nn.Module):
         return self.model(x)
     
 class CustomWeightedGATConv(MessagePassing):
-    def __init__(self, node_hidden_dim, hidden_dims, output_dim, edge_hidden_dim, node_feature_dim, activation=torch.nn.Tanh(), end_activation=None, dropout=torch.nn.Dropout(0.1)):
+    def __init__(self, node_hidden_dim, hidden_dims, output_dim, edge_hidden_dim, node_feature_dim, activation=torch.nn.Tanh(), end_activation=None, dropout=torch.nn.Dropout(0.15)):
         super(CustomWeightedGATConv, self).__init__(aggr='add')
         self.mlp = CustomMLP(2 * node_hidden_dim + node_feature_dim + edge_hidden_dim, hidden_dims, output_dim, activation, end_activation, dropout)
 
@@ -137,12 +137,12 @@ class EdgeClassificationGNN(torch.nn.Module):
 
         self.n_iters = n_iters
 
-        self.node_encoder = CustomMLP(node_feature_dim, [128, 128], node_hidden_dim)
-        self.edge_encoder = CustomMLP(2 * node_feature_dim + edge_feature_dim, [128, 128], edge_hidden_dim)
-        self.initial_edge_classification_mlp = CustomMLP(2 * node_hidden_dim + edge_hidden_dim + 2 * node_feature_dim + edge_feature_dim, [128, 128], 1, end_activation=torch.nn.Sigmoid())
-        self.node_gatconv = CustomWeightedGATConv(node_hidden_dim, [256, 128], node_hidden_dim, edge_hidden_dim, node_feature_dim)
-        self.edge_mlp= CustomMLP(2 * node_hidden_dim + edge_hidden_dim + 1 + 2 * node_feature_dim + edge_feature_dim, [128, 128], edge_hidden_dim)
-        self.edge_classification_mlp = CustomMLP(2 * node_hidden_dim + edge_hidden_dim + 1 + 2 * node_feature_dim + edge_feature_dim, [128, 128], 1, end_activation=torch.nn.Sigmoid())
+        self.node_encoder = CustomMLP(node_feature_dim, [128, 128, 128], node_hidden_dim)
+        self.edge_encoder = CustomMLP(2 * node_feature_dim + edge_feature_dim, [128, 128, 128], edge_hidden_dim)
+        self.initial_edge_classification_mlp = CustomMLP(2 * node_hidden_dim + edge_hidden_dim + 2 * node_feature_dim + edge_feature_dim, [128, 128, 128], 1, end_activation=torch.nn.Sigmoid())
+        self.node_gatconv = CustomWeightedGATConv(node_hidden_dim, [128, 128, 128], node_hidden_dim, edge_hidden_dim, node_feature_dim)
+        self.edge_mlp= CustomMLP(2 * node_hidden_dim + edge_hidden_dim + 1 + 2 * node_feature_dim + edge_feature_dim, [128, 128, 128], edge_hidden_dim)
+        self.edge_classification_mlp = CustomMLP(2 * node_hidden_dim + edge_hidden_dim + 1 + 2 * node_feature_dim + edge_feature_dim, [128, 128, 128], 1, end_activation=torch.nn.Sigmoid())
     
     def forward(self, data):
         initial_x, edge_index, edge_attr = data.x, data.edge_index, data.edge_attr
@@ -227,6 +227,8 @@ def balanced_cross_entropy(pred, target, pos_weight, neg_weight):
     return loss
 
 def main():
+    start_time = time.time()
+
     # Get args
     args = parse_args()
 
@@ -318,6 +320,8 @@ def main():
             }, model_save_path)
             last_save_time = current_time
             print('Model saved: ' + status)
+    
+    print(f"Spent time: {time.time() - start_time:.6f} s")
 
 
 if __name__ == '__main__':
