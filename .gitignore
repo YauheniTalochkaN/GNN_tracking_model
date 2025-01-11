@@ -2,5 +2,6 @@
 /trackml_out
 /MPD_dataset/MPD_events
 /MPD_dataset/TpcSampaData_1000_new.root
+/MPD_dataset/PlotEvent.nb
 /mpd_out
 /out
