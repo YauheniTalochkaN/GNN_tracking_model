@@ -3,10 +3,11 @@
 import argparse
 import yaml
 import os
+from itertools import product
 import numpy as np
 import torch
 from torch_geometric.loader import DataLoader
-from GNN_training import EdgeClassificationGNN, load_graph_from_npz, convert_nx_to_pyg_data
+from GNN_training import EdgeClassificationGNN, load_npz_to_pyg
 from sklearn.metrics import roc_curve, auc
 import matplotlib.pyplot as plt
 
@@ -112,9 +113,8 @@ def main():
     n_iters = parameters['n_iters']
 
     # Load data
-    graph_files = [os.path.join(input_dir, f'event_{evtid}_section_{section_id}_graph.npz') for evtid, section_id in zip(range(n_files), range(section_num))]
-    graphs = [load_graph_from_npz(file) for file in graph_files]
-    dataset = [convert_nx_to_pyg_data(graph) for graph in graphs]
+    graph_files = [os.path.join(input_dir, f'event_{evtid}_section_{section_id}_graph.npz') for evtid, section_id in product(range(n_files), range(section_num))]
+    dataset = [load_npz_to_pyg(file) for file in graph_files]
 
     # Split data into train and test sets
     train_len = int(len(dataset) * (1-test_size))

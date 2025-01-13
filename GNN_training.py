@@ -5,6 +5,7 @@ import yaml
 import os
 import time
 import logging
+from itertools import product
 import numpy as np
 import networkx as nx
 import torch
@@ -48,6 +49,15 @@ def convert_nx_to_pyg_data(G):
     edge_labels = torch.tensor(edge_labels, dtype=torch.float)
     
     return Data(x=x, edge_index=edge_index, edge_attr=edge_attr, y=edge_labels)
+
+def load_npz_to_pyg(filename):
+    with np.load(filename, allow_pickle=True) as data:
+        x = torch.from_numpy(data['node_pos']).float()
+        edge_index = torch.from_numpy(data['edges']).long().t().contiguous()
+        edge_attr = torch.from_numpy(data['edge_features']).float()
+        y = torch.from_numpy(data['edge_labels']).float()
+    
+    return Data(x=x, edge_index=edge_index, edge_attr=edge_attr, y=y)
 
 class CustomMLP(torch.nn.Module):
     def __init__(self, input_size, hidden_sizes, output_size, activation=torch.nn.Tanh(), end_activation=None, dropout=torch.nn.Dropout(0.1), use_layer_norm=True):
@@ -252,9 +262,8 @@ def main():
     time_lapse = parameters['time_lapse']
 
     # Load data
-    graph_files = [os.path.join(input_dir, f'event_{evtid}_section_{section_id}_graph.npz') for evtid, section_id in zip(range(n_files), range(section_num))]
-    graphs = [load_graph_from_npz(file) for file in graph_files]
-    dataset = [convert_nx_to_pyg_data(graph) for graph in graphs]
+    graph_files = [os.path.join(input_dir, f'event_{evtid}_section_{section_id}_graph.npz') for evtid, section_id in product(range(n_files), range(section_num))]
+    dataset = [load_npz_to_pyg(file) for file in graph_files]
 
     # Split data into train and test sets
     train_len = int(len(dataset) * (1-test_size))

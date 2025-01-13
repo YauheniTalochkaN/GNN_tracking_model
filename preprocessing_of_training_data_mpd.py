@@ -220,8 +220,7 @@ def process_func(evtid, input_dir, output_dir, phi_edges, eta_edges, num_rows, n
                 if hits.loc[index1, 'track_id'] == hits.loc[index2, 'track_id'] and hits.loc[index1, 'pt'] >= pt_min:
                     edge_lable = 1
                     filtered_tracks.setdefault(hits.loc[index1, 'track_id'], set()).add(hits.loc[index1, 'row_id'])
-                    if idx == last_index:
-                        filtered_tracks.setdefault(hits.loc[index2, 'track_id'], set()).add(hits.loc[index2, 'row_id'])
+                    filtered_tracks.setdefault(hits.loc[index2, 'track_id'], set()).add(hits.loc[index2, 'row_id'])
                 G.add_edge(index1, index2, features=get_edge_features(G.nodes[index1]['pos'], G.nodes[index2]['pos']), label=edge_lable)
 
             # Save graph
