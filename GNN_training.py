@@ -50,7 +50,7 @@ def convert_nx_to_pyg_data(G):
     return Data(x=x, edge_index=edge_index, edge_attr=edge_attr, y=edge_labels)
 
 class CustomMLP(torch.nn.Module):
-    def __init__(self, input_size, hidden_sizes, output_size, activation=torch.nn.Tanh(), end_activation=None, dropout=torch.nn.Dropout(0.15), use_layer_norm=True):
+    def __init__(self, input_size, hidden_sizes, output_size, activation=torch.nn.Tanh(), end_activation=None, dropout=torch.nn.Dropout(0.1), use_layer_norm=True):
         super(CustomMLP, self).__init__()
         layers = []
         # Добавляем первый скрытый слой
@@ -79,8 +79,8 @@ class CustomMLP(torch.nn.Module):
     def forward(self, x):
         return self.model(x)
     
-class CustomWeightedGATConv(MessagePassing):
-    def __init__(self, node_hidden_dim, hidden_dims, output_dim, edge_hidden_dim, node_feature_dim, activation=torch.nn.Tanh(), end_activation=None, dropout=torch.nn.Dropout(0.15)):
+""" class CustomWeightedGATConv(MessagePassing):
+    def __init__(self, node_hidden_dim, hidden_dims, output_dim, edge_hidden_dim, node_feature_dim, activation=torch.nn.Tanh(), end_activation=None, dropout=torch.nn.Dropout(0.1)):
         super(CustomWeightedGATConv, self).__init__(aggr='add')
         self.mlp = CustomMLP(2 * node_hidden_dim + node_feature_dim + edge_hidden_dim, hidden_dims, output_dim, activation, end_activation, dropout)
 
@@ -96,53 +96,52 @@ class CustomWeightedGATConv(MessagePassing):
         # Объединяем агрегированные особенности соседей с собственными особенностями узлов
         out = torch.cat([x, initial_x, aggr_out], dim=-1)
         # Пропускаем через MLP
-        return self.mlp(out)
+        return self.mlp(out) """
     
-""" class CustomWeightedGATConv(MessagePassing):
+class CustomWeightedGATConv(MessagePassing):
     def __init__(self, node_hidden_dim, hidden_dims, output_dim, edge_hidden_dim, node_feature_dim, activation=torch.nn.Tanh(), end_activation=None, dropout=torch.nn.Dropout(0.1)):
         super(CustomWeightedGATConv, self).__init__(aggr='add')
         self.mlp = CustomMLP(3 * node_hidden_dim + node_feature_dim + 2 * edge_hidden_dim, hidden_dims, output_dim, activation, end_activation, dropout)
 
     def forward(self, x, edge_index, edge_attr, edge_weight, initial_x):        
         # Первый шаг агрегации (1-hop)
-        one_hop_out = self.propagate(edge_index, x=x, y=x, edge_attr=edge_attr, edge_weight=edge_weight, hop=1)
+        one_hop_out = self.propagate(edge_index, y=x, z=x, edge_attr=edge_attr, edge_weight=edge_weight, hop=1)
 
         # Второй шаг агрегации (2-hop), используя результаты первого шага
-        two_hop_out = self.propagate(edge_index, x=one_hop_out, y=x, edge_attr=edge_attr, edge_weight=edge_weight, hop=2)
+        two_hop_out = self.propagate(edge_index, y=one_hop_out, z=x, edge_attr=edge_attr, edge_weight=edge_weight, hop=2)
 
         # Передаем результаты в update для финального объединения
         return self.final_update(x=x, one_hop_out=one_hop_out, two_hop_out=two_hop_out, initial_x=initial_x)
 
-    def message(self, x_j, y_i, edge_attr, edge_weight, hop):
+    def message(self, y_j, z_i, edge_attr, edge_weight, hop):
         # Умножаем сообщения на веса рёбер и добавляем особенности рёбер
         if hop == 1:
-            return edge_weight.view(-1, 1) * torch.cat([x_j, edge_attr], dim=-1)
+            return edge_weight.view(-1, 1) * torch.cat([y_j, edge_attr], dim=-1)
         elif hop == 2:
-            return x_j - torch.cat([y_i, edge_attr], dim=-1)
+            return y_j - edge_weight.view(-1, 1) * torch.cat([z_i, edge_attr], dim=-1)
 
     def update(self, aggr_out):
-        # "Пустой" update, просто возвращаем то, что пришло:
         return aggr_out
     
     def final_update(self, x, one_hop_out, two_hop_out, initial_x):
         # Объединяем агрегированные особенности соседей с собственными особенностями узлов
         out = torch.cat([x, initial_x, one_hop_out, two_hop_out], dim=-1)
         # Пропускаем через MLP
-        return self.mlp(out) """
+        return self.mlp(out)
 
 # Model class
 class EdgeClassificationGNN(torch.nn.Module):
-    def __init__(self, node_feature_dim, edge_feature_dim, n_iters=8, node_hidden_dim=64, edge_hidden_dim=64):
+    def __init__(self, node_feature_dim, edge_feature_dim, n_iters=6, node_hidden_dim=64, edge_hidden_dim=64):
         super(EdgeClassificationGNN, self).__init__()
 
         self.n_iters = n_iters
 
-        self.node_encoder = CustomMLP(node_feature_dim, [128, 128, 128], node_hidden_dim)
-        self.edge_encoder = CustomMLP(2 * node_feature_dim + edge_feature_dim, [128, 128, 128], edge_hidden_dim)
-        self.initial_edge_classification_mlp = CustomMLP(2 * node_hidden_dim + edge_hidden_dim + 2 * node_feature_dim + edge_feature_dim, [128, 128, 128], 1, end_activation=torch.nn.Sigmoid())
-        self.node_gatconv = CustomWeightedGATConv(node_hidden_dim, [128, 128, 128], node_hidden_dim, edge_hidden_dim, node_feature_dim)
-        self.edge_mlp= CustomMLP(2 * node_hidden_dim + edge_hidden_dim + 1 + 2 * node_feature_dim + edge_feature_dim, [128, 128, 128], edge_hidden_dim)
-        self.edge_classification_mlp = CustomMLP(2 * node_hidden_dim + edge_hidden_dim + 1 + 2 * node_feature_dim + edge_feature_dim, [128, 128, 128], 1, end_activation=torch.nn.Sigmoid())
+        self.node_encoder = CustomMLP(node_feature_dim, [128, 128], node_hidden_dim)
+        self.edge_encoder = CustomMLP(2 * node_feature_dim + edge_feature_dim, [128, 128], edge_hidden_dim)
+        self.initial_edge_classification_mlp = CustomMLP(2 * node_hidden_dim + edge_hidden_dim + 2 * node_feature_dim + edge_feature_dim, [128, 128], 1, end_activation=torch.nn.Sigmoid())
+        self.node_gatconv = CustomWeightedGATConv(node_hidden_dim, [256, 128], node_hidden_dim, edge_hidden_dim, node_feature_dim)
+        self.edge_mlp= CustomMLP(2 * node_hidden_dim + edge_hidden_dim + 1 + 2 * node_feature_dim + edge_feature_dim, [128, 128], edge_hidden_dim)
+        self.edge_classification_mlp = CustomMLP(2 * node_hidden_dim + edge_hidden_dim + 1 + 2 * node_feature_dim + edge_feature_dim, [128, 128], 1, end_activation=torch.nn.Sigmoid())
     
     def forward(self, data):
         initial_x, edge_index, edge_attr = data.x, data.edge_index, data.edge_attr
