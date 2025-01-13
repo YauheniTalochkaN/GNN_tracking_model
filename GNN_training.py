@@ -118,7 +118,7 @@ class CustomWeightedGATConv(MessagePassing):
         if hop == 1:
             return edge_weight.view(-1, 1) * torch.cat([y_j, edge_attr], dim=-1)
         elif hop == 2:
-            return y_j - edge_weight.view(-1, 1) * torch.cat([z_i, edge_attr], dim=-1)
+            return edge_weight.view(-1, 1) * (y_j - edge_weight.view(-1, 1) * torch.cat([z_i, edge_attr], dim=-1))
 
     def update(self, aggr_out):
         return aggr_out
