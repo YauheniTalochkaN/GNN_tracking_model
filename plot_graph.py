@@ -5,8 +5,20 @@ import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
-from GNN_training import load_graph_from_npz
 
+
+def load_graph_from_npz(filename):
+    data = np.load(filename, allow_pickle=True)
+    
+    G = nx.Graph()
+    
+    for i, node in enumerate(data['nodes']):
+        G.add_node(node, pos=data['node_pos'][i])
+    
+    for edge, features, label in zip(data['edges'], data['edge_features'], data['edge_labels']):
+        G.add_edge(*edge, features=features, label=label)
+    
+    return G
 
 def get_pos(Gp):
     pos = {}

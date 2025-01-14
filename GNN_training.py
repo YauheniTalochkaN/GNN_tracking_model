@@ -22,34 +22,6 @@ def parse_args():
     add_arg('config', nargs='?', default='configs/training_parameters_mpd.yaml')
     return parser.parse_args()
 
-def load_graph_from_npz(filename):
-    data = np.load(filename, allow_pickle=True)
-    
-    G = nx.Graph()
-    
-    for i, node in enumerate(data['nodes']):
-        G.add_node(node, pos=data['node_pos'][i])
-    
-    for edge, features, label in zip(data['edges'], data['edge_features'], data['edge_labels']):
-        G.add_edge(*edge, features=features, label=label)
-    
-    return G
-
-def convert_nx_to_pyg_data(G):
-    # Get features of nodes and edges
-    x = np.array([G.nodes[node]['pos'] for node in G.nodes])
-    edge_index = np.array(list(G.edges)).T
-    edge_attr = np.array([G.edges[edge]['features'] for edge in G.edges])
-    edge_labels = np.array([G.edges[edge]['label'] for edge in G.edges])
-    
-    # Convert them into torch tensors
-    x = torch.tensor(x, dtype=torch.float)
-    edge_index = torch.tensor(edge_index, dtype=torch.long)
-    edge_attr = torch.tensor(edge_attr, dtype=torch.float)
-    edge_labels = torch.tensor(edge_labels, dtype=torch.float)
-    
-    return Data(x=x, edge_index=edge_index, edge_attr=edge_attr, y=edge_labels)
-
 def load_npz_to_pyg(filename):
     with np.load(filename, allow_pickle=True) as data:
         x = torch.from_numpy(data['node_pos']).float()
@@ -109,9 +81,10 @@ class CustomMLP(torch.nn.Module):
         return self.mlp(out) """
     
 class CustomWeightedGATConv(MessagePassing):
-    def __init__(self, node_hidden_dim, hidden_dims, output_dim, edge_hidden_dim, node_feature_dim, activation=torch.nn.Tanh(), end_activation=None, dropout=torch.nn.Dropout(0.1)):
+    def __init__(self, node_hidden_dim, hidden_dims1, hidden_dims2, output_dim, edge_hidden_dim, node_feature_dim, activation=torch.nn.Tanh(), end_activation=None, dropout=torch.nn.Dropout(0.1)):
         super(CustomWeightedGATConv, self).__init__(aggr='add')
-        self.mlp = CustomMLP(3 * node_hidden_dim + node_feature_dim + 2 * edge_hidden_dim, hidden_dims, output_dim, activation, end_activation, dropout)
+        self.x_mlp = CustomMLP(3 * node_hidden_dim + node_feature_dim + 2 * edge_hidden_dim, hidden_dims1, output_dim, activation, end_activation, dropout)
+        self.weight_mlp = CustomMLP(edge_hidden_dim + 1, hidden_dims2, 1, activation, end_activation, dropout)
 
     def forward(self, x, edge_index, edge_attr, edge_weight, initial_x):        
         # Первый шаг агрегации (1-hop)
@@ -124,11 +97,14 @@ class CustomWeightedGATConv(MessagePassing):
         return self.final_update(x=x, one_hop_out=one_hop_out, two_hop_out=two_hop_out, initial_x=initial_x)
 
     def message(self, y_j, z_i, edge_attr, edge_weight, hop):
+
+        weights = self.weight_mlp(torch.cat([edge_weight.view(-1, 1), edge_attr], dim=-1))
+
         # Умножаем сообщения на веса рёбер и добавляем особенности рёбер
         if hop == 1:
-            return edge_weight.view(-1, 1) * torch.cat([y_j, edge_attr], dim=-1)
+            return weights * torch.cat([y_j, edge_attr], dim=-1)
         elif hop == 2:
-            return edge_weight.view(-1, 1) * (y_j - edge_weight.view(-1, 1) * torch.cat([z_i, edge_attr], dim=-1))
+            return weights * (y_j - weights * torch.cat([z_i, edge_attr], dim=-1))
 
     def update(self, aggr_out):
         return aggr_out
@@ -137,7 +113,7 @@ class CustomWeightedGATConv(MessagePassing):
         # Объединяем агрегированные особенности соседей с собственными особенностями узлов
         out = torch.cat([x, initial_x, one_hop_out, two_hop_out], dim=-1)
         # Пропускаем через MLP
-        return self.mlp(out)
+        return self.x_mlp(out)
 
 # Model class
 class EdgeClassificationGNN(torch.nn.Module):
@@ -149,7 +125,7 @@ class EdgeClassificationGNN(torch.nn.Module):
         self.node_encoder = CustomMLP(node_feature_dim, [128, 128], node_hidden_dim)
         self.edge_encoder = CustomMLP(2 * node_feature_dim + edge_feature_dim, [128, 128], edge_hidden_dim)
         self.initial_edge_classification_mlp = CustomMLP(2 * node_hidden_dim + edge_hidden_dim + 2 * node_feature_dim + edge_feature_dim, [128, 128], 1, end_activation=torch.nn.Sigmoid())
-        self.node_gatconv = CustomWeightedGATConv(node_hidden_dim, [256, 128], node_hidden_dim, edge_hidden_dim, node_feature_dim)
+        self.node_gatconv = CustomWeightedGATConv(node_hidden_dim, [256, 128], [128, 128], node_hidden_dim, edge_hidden_dim, node_feature_dim)
         self.edge_mlp= CustomMLP(2 * node_hidden_dim + edge_hidden_dim + 1 + 2 * node_feature_dim + edge_feature_dim, [128, 128], edge_hidden_dim)
         self.edge_classification_mlp = CustomMLP(2 * node_hidden_dim + edge_hidden_dim + 1 + 2 * node_feature_dim + edge_feature_dim, [128, 128], 1, end_activation=torch.nn.Sigmoid())
     
@@ -286,7 +262,7 @@ def main():
     node_feature_dim = dataset[0].x.size(1)
     edge_feature_dim = dataset[0].edge_attr.size(1)
     model = EdgeClassificationGNN(node_feature_dim, edge_feature_dim, n_iters).to(device) 
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    optimizer = torch.optim.RAdam(model.parameters(), lr=learning_rate)
     scheduler = StepLR(optimizer, step_size=step_size, gamma=gamma)
     pos_weight = torch.tensor(pos_weight, dtype=torch.float).to(device)
     neg_weight = torch.tensor(neg_weight, dtype=torch.float).to(device)

@@ -59,7 +59,7 @@ def calc_eta(r, z):
     theta = np.arctan2(r, z)
     return -1. * np.log(np.tan(theta / 2.))
 
-def select_segments(hits1, hits2, phi_slope_max, z0_max):
+def select_segments(hits1, hits2, phi_slope_max, z0_max, theta_max, d_min, d_max):
     # Start with all possible pairs of hits
     keys = ['evtid', 'r', 'phi', 'z']
     hit_pairs = hits1[keys].reset_index().merge(hits2[keys].reset_index(), on='evtid', suffixes=('_1', '_2'))
@@ -70,9 +70,16 @@ def select_segments(hits1, hits2, phi_slope_max, z0_max):
     dr = hit_pairs.r_2 - hit_pairs.r_1
     phi_slope = dphi / dr
     z0 = hit_pairs.z_1 - hit_pairs.r_1 * dz / dr
+    distance = np.sqrt(dr**2 + dz**2)
+    theta = np.arctan(dz / dr)
 
     # Filter segments according to criteria
-    good_seg_mask = (phi_slope.abs() < phi_slope_max) & (z0.abs() < z0_max)
+    good_seg_mask = (
+        (phi_slope.abs() < phi_slope_max) &
+        (z0.abs() < z0_max) &
+        (theta.abs() < theta_max) &
+        (distance > d_min) & (distance < d_max)
+    )
 
     return hit_pairs[['index_1', 'index_2']][good_seg_mask]
 
@@ -148,7 +155,7 @@ def parse_args():
     add_arg('--j', type=int, default=1)
     return parser.parse_args()
 
-def process_func(evtid, input_dir, output_dir, phi_edges, eta_edges, num_rows, node_feature_scale, phi_slope_max, z0_max, pt_min):
+def process_func(evtid, input_dir, output_dir, phi_edges, eta_edges, num_rows, node_feature_scale, phi_slope_max, z0_max, theta_max, d_min, d_max, pt_min):
         # The name of the current file 
         event_name = input_dir + f'/event_{evtid}_'
         print(f'Processing: {event_name:s}hits/truth.csv')
@@ -205,7 +212,7 @@ def process_func(evtid, input_dir, output_dir, phi_edges, eta_edges, num_rows, n
                     counts += count_hits1 * count_hits2
 
                 # Construct the segments
-                segments.append(select_segments(hits1, hits2, phi_slope_max, z0_max))
+                segments.append(select_segments(hits1, hits2, phi_slope_max, z0_max, theta_max, d_min, d_max))
 
             # Combine segments from all row pairs
             segments = pd.concat(segments)
@@ -253,6 +260,9 @@ def main():
     selection = parameters['selection']
     phi_slope_max = selection['phi_slope_max']
     z0_max = selection['z0_max']
+    theta_max = selection['theta_max']
+    d_min = selection['d_min']
+    d_max = selection['d_max']
     pt_min = selection['pt_min']
     n_phi_sections = selection['n_phi_sections']
     n_eta_sections = selection['n_eta_sections']
@@ -273,7 +283,8 @@ def main():
         partial_func = partial(process_func, input_dir=input_dir, output_dir=output_dir, 
                                phi_edges=phi_edges, eta_edges=eta_edges, num_rows=num_rows,
                                node_feature_scale=node_feature_scale, 
-                               phi_slope_max=phi_slope_max, z0_max=z0_max, pt_min=pt_min)
+                               phi_slope_max=phi_slope_max, z0_max=z0_max,
+                               theta_max=theta_max, d_min=d_min, d_max=d_max, pt_min=pt_min)
         pool.map(partial_func, range(n_files))
 
 

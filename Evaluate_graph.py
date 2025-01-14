@@ -7,12 +7,28 @@ import yaml
 import networkx as nx
 import numpy as np
 import torch
+from torch_geometric.data import Data
 from torch_geometric.loader import DataLoader
-from GNN_training import EdgeClassificationGNN, load_graph_from_npz, convert_nx_to_pyg_data
-from plot_graph import get_pos, get_3Dpos
+from GNN_training import EdgeClassificationGNN
+from plot_graph import get_pos, get_3Dpos, load_graph_from_npz
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
 
+
+def convert_nx_to_pyg_data(G):
+    # Get features of nodes and edges
+    x = np.array([G.nodes[node]['pos'] for node in G.nodes])
+    edge_index = np.array(list(G.edges)).T
+    edge_attr = np.array([G.edges[edge]['features'] for edge in G.edges])
+    edge_labels = np.array([G.edges[edge]['label'] for edge in G.edges])
+    
+    # Convert them into torch tensors
+    x = torch.tensor(x, dtype=torch.float)
+    edge_index = torch.tensor(edge_index, dtype=torch.long)
+    edge_attr = torch.tensor(edge_attr, dtype=torch.float)
+    edge_labels = torch.tensor(edge_labels, dtype=torch.float)
+    
+    return Data(x=x, edge_index=edge_index, edge_attr=edge_attr, y=edge_labels)
 
 # Evaluate metrics
 def evaluate(model, loader, device, threshold=0.5):
