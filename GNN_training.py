@@ -305,7 +305,7 @@ def main():
             last_save_time = current_time
             print('Model saved: ' + status)
     
-    print(f"Spent time: {time.time() - start_time:.6f} s")
+    print(f"Spent time: {time.time() - start_time:.3f} s")
 
 
 if __name__ == '__main__':
