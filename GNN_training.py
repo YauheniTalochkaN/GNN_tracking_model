@@ -7,7 +7,6 @@ import time
 import logging
 from itertools import product
 import numpy as np
-import networkx as nx
 import torch
 from torch_geometric.data import Data
 from torch_geometric.loader import DataLoader
