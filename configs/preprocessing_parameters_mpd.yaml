@@ -8,7 +8,7 @@ selection:
     theta_max: 1.4
     d_min: 0
     d_max: 5
-    pt_min: 0.19
+    pt_min: 0.2
     n_phi_sections: 4
     n_eta_sections: 2
     eta_range: [-6, 6]

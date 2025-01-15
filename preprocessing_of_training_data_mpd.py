@@ -198,19 +198,6 @@ def process_func(evtid, input_dir, output_dir, phi_edges, eta_edges, num_rows, n
                     logging.info(f'Skipping empty row: {exc}')
                     continue
 
-                filtered_hits1 = hits1[hits1['pt'] >= pt_min]
-                filtered_hits2 = hits2[hits2['pt'] >= pt_min]
-                
-                # Поиск пересечения track_id
-                common_track_ids = set(filtered_hits1['track_id']).intersection(set(filtered_hits2['track_id']))
-                
-                # Подсчет количества комбинаций строк
-                counts = 0
-                for track_id in common_track_ids:
-                    count_hits1 = len(filtered_hits1[filtered_hits1['track_id'] == track_id])
-                    count_hits2 = len(filtered_hits2[filtered_hits2['track_id'] == track_id])
-                    counts += count_hits1 * count_hits2
-
                 # Construct the segments
                 segments.append(select_segments(hits1, hits2, phi_slope_max, z0_max, theta_max, d_min, d_max))
 
