@@ -116,15 +116,15 @@ class CustomWeightedGATConv(MessagePassing):
 
 # Model class
 class EdgeClassificationGNN(torch.nn.Module):
-    def __init__(self, node_feature_dim, edge_feature_dim, n_iters=6, node_hidden_dim=64, edge_hidden_dim=64):
+    def __init__(self, node_feature_dim, edge_feature_dim, n_iters=6, node_hidden_dim=32, edge_hidden_dim=32):
         super(EdgeClassificationGNN, self).__init__()
 
         self.n_iters = n_iters
 
-        self.node_encoder = CustomMLP(node_feature_dim, [128, 128], node_hidden_dim)
-        self.edge_encoder = CustomMLP(2 * node_feature_dim + edge_feature_dim, [128, 128], edge_hidden_dim)
-        self.initial_edge_classification_mlp = CustomMLP(2 * node_hidden_dim + edge_hidden_dim + 2 * node_feature_dim + edge_feature_dim, [128, 128], 1, end_activation=torch.nn.Sigmoid())
-        self.node_gatconv = CustomWeightedGATConv(node_hidden_dim, [256, 128], [128, 128], node_hidden_dim, edge_hidden_dim, node_feature_dim)
+        self.node_encoder = CustomMLP(node_feature_dim, [64, 64], node_hidden_dim)
+        self.edge_encoder = CustomMLP(2 * node_feature_dim + edge_feature_dim, [64, 64], edge_hidden_dim)
+        self.initial_edge_classification_mlp = CustomMLP(2 * node_hidden_dim + edge_hidden_dim + 2 * node_feature_dim + edge_feature_dim, [128, 64], 1, end_activation=torch.nn.Sigmoid())
+        self.node_gatconv = CustomWeightedGATConv(node_hidden_dim, [128, 128], [64, 64], node_hidden_dim, edge_hidden_dim, node_feature_dim)
         self.edge_mlp= CustomMLP(2 * node_hidden_dim + edge_hidden_dim + 1 + 2 * node_feature_dim + edge_feature_dim, [128, 128], edge_hidden_dim)
         self.edge_classification_mlp = CustomMLP(2 * node_hidden_dim + edge_hidden_dim + 1 + 2 * node_feature_dim + edge_feature_dim, [128, 128], 1, end_activation=torch.nn.Sigmoid())
     
