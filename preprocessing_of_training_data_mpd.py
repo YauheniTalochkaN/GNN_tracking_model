@@ -70,7 +70,7 @@ def select_segments(hits1, hits2, phi_slope_max, z0_max, theta_max, d_min, d_max
     dr = hit_pairs.r_2 - hit_pairs.r_1
     phi_slope = dphi / dr
     z0 = hit_pairs.z_1 - hit_pairs.r_1 * dz / dr
-    distance = np.sqrt(dr**2 + dz**2)
+    distance = np.sqrt(hit_pairs.r_1**2 + hit_pairs.r_2**2 - 2 * hit_pairs.r_1 * hit_pairs.r_2 * np.cos(dphi) + dz**2)
     theta = np.arctan(dz / dr)
 
     # Filter segments according to criteria
@@ -175,7 +175,7 @@ def process_func(evtid, input_dir, output_dir, phi_edges, eta_edges, num_rows, n
         l = np.arange(num_rows)
         row_pairs = np.stack([l[:-1], l[1:]], axis=1)
 
-        filtered_tracks = dict()
+        filtered_track_segments = dict()
 
         # Loop over row pairs and construct segments
         for section_id, hits in enumerate(hits_sections):
@@ -215,8 +215,7 @@ def process_func(evtid, input_dir, output_dir, phi_edges, eta_edges, num_rows, n
                 index1 == (filtered_hits1['phi'] - filtered_hits1['phi'].mean()).abs().idxmin() and \
                 index2 == (filtered_hits2['phi'] - filtered_hits2['phi'].mean()).abs().idxmin():
                     edge_lable = 1
-                    filtered_tracks.setdefault(hits.loc[index1, 'track_id'], set()).add(hits.loc[index1, 'row_id'])
-                    filtered_tracks.setdefault(hits.loc[index2, 'track_id'], set()).add(hits.loc[index2, 'row_id'])
+                    filtered_track_segments.setdefault(hits.loc[index1, 'track_id'], set()).add((hits.loc[index1, 'row_id'], hits.loc[index2, 'row_id']))
                 G.add_edge(index1, index2, features=get_edge_features(G.nodes[index1]['pos'], G.nodes[index2]['pos']), label=edge_lable)
 
             # Save graph
@@ -227,12 +226,17 @@ def process_func(evtid, input_dir, output_dir, phi_edges, eta_edges, num_rows, n
         filtered_track_id_groups = hits_df[hits_df['pt'] >= pt_min].groupby('track_id')
 
         av_eff = 0
-        for key in filtered_tracks:
-            av_eff += len(filtered_tracks[key]) / len(set(filtered_track_id_groups.get_group(key)['row_id']))
+        for key in filtered_track_segments:
+            numbers = set(filtered_track_id_groups.get_group(key)['row_id'])
+            count = 0
+            for num in numbers:
+                if num + 1 in numbers:
+                    count += 1
+            av_eff += len(filtered_track_segments[key]) / (count + 1e-8)
 
-        av_eff /= len(filtered_tracks.keys()) + 1e-8
+        av_eff /= len(filtered_track_segments.keys()) + 1e-8
         
-        print(f'Filter efficiency: {av_eff * 100:.2f}')
+        print(f'Integrity: {av_eff * 100:.2f}')
         
 def main():
     # Get args
