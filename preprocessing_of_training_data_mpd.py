@@ -180,7 +180,7 @@ def process_func(evtid, input_dir, output_dir, phi_edges, eta_edges, num_rows, n
         # Loop over row pairs and construct segments
         for section_id, hits in enumerate(hits_sections):
             # Make graph
-            G = nx.Graph()
+            G = nx.DiGraph()
             for idx, row in hits.iterrows():
                 G.add_node(idx, pos=row[['r', 'phi', 'z']].to_numpy() / node_feature_scale)
 
