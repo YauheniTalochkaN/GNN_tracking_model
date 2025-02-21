@@ -149,7 +149,7 @@ def parse_args():
     parser = argparse.ArgumentParser('prepare.py')
     add_arg = parser.add_argument
     add_arg('graph_file')
-    add_arg('config', nargs='?', default='configs/training_parameters_mpd.yaml')
+    add_arg('config', nargs='?', default='configs/training_parameters.yaml')
     add_arg('--threshold', type=float, default=0.5)
     add_arg('--animate', type=str, default='False')
     add_arg('--only_true', type=str, default='False')
@@ -199,7 +199,7 @@ def main():
         checkpoint = torch.load(model_save_path, weights_only=True, map_location=device)
         if 'model_state_dict' in checkpoint and 'optimizer_state_dict' in checkpoint and 'epoch' in checkpoint:
             model.load_state_dict(checkpoint['model_state_dict'])
-            print(f'Loaded checkpoint from epoch {checkpoint['epoch']+1}')
+            print(f'Loaded checkpoint from epoch {checkpoint["epoch"]+1}')
         else:
             print('Checkpoint file is missing some keys, starting from scratch.')
             return

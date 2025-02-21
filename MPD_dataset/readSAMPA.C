@@ -171,7 +171,7 @@ void ReadHits(TDirectory* pDir, uint nEvent)
 
 void readSAMPA() 
 {
-    TFile* pFile = TFile::Open("TpcSampaData_1000_new.root");
+    TFile* pFile = TFile::Open("TpcData_1000.root");
 
     if(pFile && pFile->IsOpen()) 
 	{
@@ -180,7 +180,7 @@ void readSAMPA()
 		
         while((pKey = (TKey*)iKey()))
 		{			
-            if(pKey->IsFolder() && !strcmp(pKey->GetName(), "TpcSampaEvents"))
+            if(pKey->IsFolder() && !strcmp(pKey->GetName(), "TpcEvents"))
 			{
 				for(size_t ev_num = 0; ev_num < 1000; ev_num++)
 				{

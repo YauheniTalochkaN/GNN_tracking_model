@@ -18,7 +18,7 @@ from torch_geometric.nn import MessagePassing
 def parse_args():
     parser = argparse.ArgumentParser('prepare.py')
     add_arg = parser.add_argument
-    add_arg('config', nargs='?', default='configs/training_parameters_mpd.yaml')
+    add_arg('config', nargs='?', default='configs/training_parameters.yaml')
     return parser.parse_args()
 
 def load_npz_to_pyg(filename):
@@ -264,7 +264,7 @@ def main():
     node_feature_dim = dataset[0].x.size(1)
     edge_feature_dim = dataset[0].edge_attr.size(1)
     model = EdgeClassificationGNN(node_feature_dim, edge_feature_dim, n_iters).to(device) 
-    optimizer = torch.optim.RAdam(model.parameters(), lr=learning_rate)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate, amsgrad=True, weight_decay=1e-3)
     scheduler = StepLR(optimizer, step_size=step_size, gamma=gamma)
     pos_weight = torch.tensor(pos_weight, dtype=torch.float).to(device)
     neg_weight = torch.tensor(neg_weight, dtype=torch.float).to(device)
