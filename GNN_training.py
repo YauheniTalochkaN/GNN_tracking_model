@@ -60,25 +60,6 @@ class CustomMLP(torch.nn.Module):
     def forward(self, x):
         return self.model(x)
     
-""" class CustomWeightedGATConv(MessagePassing):
-    def __init__(self, node_hidden_dim, hidden_dims, output_dim, edge_hidden_dim, node_feature_dim, activation=torch.nn.Tanh(), end_activation=None, dropout=torch.nn.Dropout(0.1)):
-        super(CustomWeightedGATConv, self).__init__(aggr='add')
-        self.mlp = CustomMLP(2 * node_hidden_dim + node_feature_dim + edge_hidden_dim, hidden_dims, output_dim, activation, end_activation, dropout)
-
-    def forward(self, x, edge_index, edge_attr, edge_weight, initial_x):
-        # Прямой проход
-        return self.propagate(edge_index, x=x, edge_attr=edge_attr, edge_weight=edge_weight, initial_x=initial_x)
-
-    def message(self, x_j, edge_attr, edge_weight):
-        # Умножаем сообщения на веса рёбер и добавляем особенности рёбер
-        return edge_weight.view(-1, 1) * torch.cat([x_j, edge_attr], dim=-1)
-
-    def update(self, aggr_out, x, initial_x):
-        # Объединяем агрегированные особенности соседей с собственными особенностями узлов
-        out = torch.cat([x, initial_x, aggr_out], dim=-1)
-        # Пропускаем через MLP
-        return self.mlp(out) """
-    
 class CustomWeightedGATConv(MessagePassing):
     def __init__(self, node_hidden_dim, hidden_dims, output_dim, edge_hidden_dim, node_feature_dim, activation=torch.nn.Tanh(), end_activation=None, dropout=torch.nn.Dropout(0.1)):
         super(CustomWeightedGATConv, self).__init__(aggr='add')
