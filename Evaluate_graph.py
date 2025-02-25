@@ -119,12 +119,12 @@ def plot3D_networkx(G, pred, animate=False, only_true=False):
             if int(edge[2]['label']) != int(pred[iedge]):
                 col = 'red'
         if int(edge[2]['label']) == 1:
-            ax.plot([p1[0] * np.cos(p1[1]), p2[0] * np.cos(p2[1])], 
-                    [p1[0] * np.sin(p1[1]), p2[0] * np.sin(p2[1])],
+            ax.plot([p1[0] * np.cos(np.pi * p1[1]), p2[0] * np.cos(np.pi * p2[1])], 
+                    [p1[0] * np.sin(np.pi * p1[1]), p2[0] * np.sin(np.pi * p2[1])],
                     [p1[2], p2[2]], color=col, linewidth=linewidth, alpha=alpha)
         elif not only_true:
-            ax.plot([p1[0] * np.cos(p1[1]), p2[0] * np.cos(p2[1])], 
-                    [p1[0] * np.sin(p1[1]), p2[0] * np.sin(p2[1])],
+            ax.plot([p1[0] * np.cos(np.pi * p1[1]), p2[0] * np.cos(np.pi * p2[1])], 
+                    [p1[0] * np.sin(np.pi * p1[1]), p2[0] * np.sin(np.pi * p2[1])],
                     [p1[2], p2[2]], color=col, linewidth=linewidth, alpha=alpha)
 
     ax.tick_params(axis='both', which='major', labelsize=14)

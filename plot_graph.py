@@ -24,8 +24,8 @@ def get_pos(Gp):
     pos = {}
     for node in Gp.nodes():
         r, phi, z = Gp.nodes[node]['pos'][:3]
-        x = r * np.cos(phi)
-        y = r * np.sin(phi)
+        x = r * np.cos(np.pi * phi)
+        y = r * np.sin(np.pi * phi)
         pos[node] = np.array([x, y])
     return pos
 
@@ -33,8 +33,8 @@ def get_3Dpos(Gp):
     pos = {}
     for node in Gp.nodes():
         r, phi, z = Gp.nodes[node]['pos'][:3]
-        x = r * np.cos(phi)
-        y = r * np.sin(phi)
+        x = r * np.cos(np.pi * phi)
+        y = r * np.sin(np.pi * phi)
         pos[node] = np.array([x, y, z])
     return pos
 
@@ -82,12 +82,12 @@ def plot3D_networkx(G, animate=False, only_true=False):
             alpha = 0.3
             linewidth = 0.7
         if int(edge[2]['label']) == 1:
-            ax.plot([p1[0] * np.cos(p1[1]), p2[0] * np.cos(p2[1])], 
-                    [p1[0] * np.sin(p1[1]), p2[0] * np.sin(p2[1])],
+            ax.plot([p1[0] * np.cos(np.pi * p1[1]), p2[0] * np.cos(np.pi * p2[1])], 
+                    [p1[0] * np.sin(np.pi * p1[1]), p2[0] * np.sin(np.pi * p2[1])],
                     [p1[2], p2[2]], color=col, linewidth=linewidth, alpha=alpha)
         elif not only_true:
-            ax.plot([p1[0] * np.cos(p1[1]), p2[0] * np.cos(p2[1])], 
-                    [p1[0] * np.sin(p1[1]), p2[0] * np.sin(p2[1])],
+            ax.plot([p1[0] * np.cos(np.pi * p1[1]), p2[0] * np.cos(np.pi * p2[1])], 
+                    [p1[0] * np.sin(np.pi * p1[1]), p2[0] * np.sin(np.pi * p2[1])],
                     [p1[2], p2[2]], color=col, linewidth=linewidth, alpha=alpha)
 
     ax.tick_params(axis='both', which='major', labelsize=14)

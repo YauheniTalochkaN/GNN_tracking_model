@@ -269,7 +269,7 @@ def main():
     eta_edges = np.linspace(*eta_range, num=n_eta_sections+1)
 
     # Parameters of feature nodes normalization
-    node_feature_scale = np.array([rmax, np.pi / n_phi_sections, zmax])
+    node_feature_scale = np.array([rmax, np.pi, zmax])
 
     # Process input files with a worker pool
     with mp.Pool(processes=args.j) as pool: 

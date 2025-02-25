@@ -118,10 +118,8 @@ def main():
 
     # Split data into train and test sets
     train_len = int(len(dataset) * (1-test_size))
-    train_dataset = dataset[:train_len]
     test_dataset = dataset[train_len:]
 
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
     # Define device
