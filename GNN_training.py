@@ -85,9 +85,9 @@ class CustomWeightedGATConv(MessagePassing):
 
     def message(self, x_j, edge_attr, edge_weight, hop):
         if hop == 1:
-            return edge_weight.view(-1, 1) * torch.cat([x_j, edge_attr], dim=-1)
+            return edge_weight * torch.cat([x_j, edge_attr], dim=-1)
         elif hop == 2:
-            return edge_weight.view(-1, 1) * x_j
+            return edge_weight * x_j
 
     def update(self, aggr_out):
         return aggr_out
@@ -129,7 +129,7 @@ class EdgeClassificationGNN(torch.nn.Module):
 
         for _ in range(self.n_iters):
             # Обновление скрытых представлений узлов
-            x = self.node_gatconv(x, edge_index, edge_hidden, edge_labels.squeeze(), initial_x)
+            x = self.node_gatconv(x, edge_index, edge_hidden, edge_labels, initial_x)
 
             # Обновление скрытых представлений рёбер
             edge_features = torch.cat([x[row], x[col], edge_hidden, edge_labels, initial_x[row], initial_x[col], edge_attr], dim=1)
