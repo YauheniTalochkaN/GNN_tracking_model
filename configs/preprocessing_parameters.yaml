@@ -3,9 +3,9 @@ output_dir: ./mpd_out/train_graphs
 n_files: 1000
 
 selection:
-    phi_slope_max: 0.05
-    z0_max: 400
-    theta_max: 1.5
+    dphi_max: 0.1
+    z0_max: 500
+    dtheta_max: 1.6
     d_min: 0
     d_max: 10
     pt_min: 0.1

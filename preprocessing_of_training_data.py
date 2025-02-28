@@ -59,7 +59,7 @@ def calc_eta(r, z):
     theta = np.arctan2(r, z)
     return -1. * np.log(np.tan(theta / 2.))
 
-def select_segments(hits1, hits2, phi_slope_max, z0_max, theta_max, d_min, d_max):
+def select_segments(hits1, hits2, dphi_max, z0_max, dtheta_max, d_min, d_max):
     # Start with all possible pairs of hits
     keys = ['evtid', 'r', 'phi', 'z']
     hit_pairs = hits1[keys].reset_index().merge(hits2[keys].reset_index(), on='evtid', suffixes=('_1', '_2'))
@@ -68,16 +68,15 @@ def select_segments(hits1, hits2, phi_slope_max, z0_max, theta_max, d_min, d_max
     dphi = calc_dphi(hit_pairs.phi_1, hit_pairs.phi_2)
     dz = hit_pairs.z_2 - hit_pairs.z_1
     dr = hit_pairs.r_2 - hit_pairs.r_1
-    phi_slope = dphi / dr
     z0 = hit_pairs.z_1 - hit_pairs.r_1 * dz / dr
     distance = np.sqrt(hit_pairs.r_1**2 + hit_pairs.r_2**2 - 2 * hit_pairs.r_1 * hit_pairs.r_2 * np.cos(dphi) + dz**2)
-    theta = np.arctan(dz / dr)
+    dtheta = np.arctan(dz / dr)
 
     # Filter segments according to criteria
     good_seg_mask = (
-        (phi_slope.abs() < phi_slope_max) &
+        (dphi.abs() < dphi_max) &
         (z0.abs() < z0_max) &
-        (theta.abs() < theta_max) &
+        (dtheta.abs() < dtheta_max) &
         (distance > d_min) & (distance < d_max)
     )
 
@@ -155,7 +154,7 @@ def parse_args():
     add_arg('--j', type=int, default=1)
     return parser.parse_args()
 
-def process_func(evtid, input_dir, output_dir, phi_edges, eta_edges, num_rows, node_feature_scale, phi_slope_max, z0_max, theta_max, d_min, d_max, pt_min):
+def process_func(evtid, input_dir, output_dir, phi_edges, eta_edges, num_rows, node_feature_scale, dphi_max, z0_max, dtheta_max, d_min, d_max, pt_min):
         # The name of the current file 
         event_name = input_dir + f'/event_{evtid}_'
         print(f'Processing: {event_name:s}hits/truth.csv')
@@ -199,7 +198,7 @@ def process_func(evtid, input_dir, output_dir, phi_edges, eta_edges, num_rows, n
                     continue
 
                 # Construct the segments
-                segments.append(select_segments(hits1, hits2, phi_slope_max, z0_max, theta_max, d_min, d_max))
+                segments.append(select_segments(hits1, hits2, dphi_max, z0_max, dtheta_max, d_min, d_max))
 
             # Combine segments from all row pairs
             segments = pd.concat(segments)
@@ -209,11 +208,10 @@ def process_func(evtid, input_dir, output_dir, phi_edges, eta_edges, num_rows, n
                 index1 = row['index_1']
                 index2 = row['index_2']
                 edge_lable = 0
-                filtered_hits1 = hits[(hits['track_id'] == hits.loc[index1, 'track_id']) & (hits['row_id'] == hits.loc[index1, 'row_id'])]
-                filtered_hits2 = hits[(hits['track_id'] == hits.loc[index2, 'track_id']) & (hits['row_id'] == hits.loc[index2, 'row_id'])]
-                if hits.loc[index1, 'track_id'] == hits.loc[index2, 'track_id'] and hits.loc[index1, 'pt'] >= pt_min and \
-                index1 == (filtered_hits1['phi'] - filtered_hits1['phi'].mean()).abs().idxmin() and \
-                index2 == (filtered_hits2['phi'] - filtered_hits2['phi'].mean()).abs().idxmin():
+                #filtered_hits1 = hits[(hits['track_id'] == hits.loc[index1, 'track_id']) & (hits['row_id'] == hits.loc[index1, 'row_id'])]
+                #filtered_hits2 = hits[(hits['track_id'] == hits.loc[index2, 'track_id']) & (hits['row_id'] == hits.loc[index2, 'row_id'])]
+                if hits.loc[index1, 'track_id'] == hits.loc[index2, 'track_id'] and hits.loc[index1, 'pt'] >= pt_min: # and \
+                #index1 == filtered_hits1['phi'].idxmin() and index2 == filtered_hits2['phi'].idxmin():
                     edge_lable = 1
                     filtered_track_segments.setdefault(hits.loc[index1, 'track_id'], set()).add((hits.loc[index1, 'row_id'], hits.loc[index2, 'row_id']))
                 G.add_edge(index1, index2, features=get_edge_features(G.nodes[index1]['pos'], G.nodes[index2]['pos']), label=edge_lable)
@@ -251,9 +249,9 @@ def main():
     output_dir = parameters['output_dir']
     n_files = parameters['n_files']
     selection = parameters['selection']
-    phi_slope_max = selection['phi_slope_max']
+    dphi_max = selection['dphi_max']
     z0_max = selection['z0_max']
-    theta_max = selection['theta_max']
+    dtheta_max = selection['dtheta_max']
     d_min = selection['d_min']
     d_max = selection['d_max']
     pt_min = selection['pt_min']
@@ -276,8 +274,8 @@ def main():
         partial_func = partial(process_func, input_dir=input_dir, output_dir=output_dir, 
                                phi_edges=phi_edges, eta_edges=eta_edges, num_rows=num_rows,
                                node_feature_scale=node_feature_scale, 
-                               phi_slope_max=phi_slope_max, z0_max=z0_max,
-                               theta_max=theta_max, d_min=d_min, d_max=d_max, pt_min=pt_min)
+                               dphi_max=dphi_max, z0_max=z0_max,
+                               dtheta_max=dtheta_max, d_min=d_min, d_max=d_max, pt_min=pt_min)
         pool.map(partial_func, range(n_files))
 
 
