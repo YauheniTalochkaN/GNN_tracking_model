@@ -208,10 +208,10 @@ def process_func(evtid, input_dir, output_dir, phi_edges, eta_edges, num_rows, n
                 index1 = row['index_1']
                 index2 = row['index_2']
                 edge_lable = 0
-                #filtered_hits1 = hits[(hits['track_id'] == hits.loc[index1, 'track_id']) & (hits['row_id'] == hits.loc[index1, 'row_id'])]
-                #filtered_hits2 = hits[(hits['track_id'] == hits.loc[index2, 'track_id']) & (hits['row_id'] == hits.loc[index2, 'row_id'])]
-                if hits.loc[index1, 'track_id'] == hits.loc[index2, 'track_id'] and hits.loc[index1, 'pt'] >= pt_min: # and \
-                #index1 == filtered_hits1['phi'].idxmin() and index2 == filtered_hits2['phi'].idxmin():
+                filtered_hits1 = hits[(hits['track_id'] == hits.loc[index1, 'track_id']) & (hits['row_id'] == hits.loc[index1, 'row_id'])]
+                filtered_hits2 = hits[(hits['track_id'] == hits.loc[index2, 'track_id']) & (hits['row_id'] == hits.loc[index2, 'row_id'])]
+                if hits.loc[index1, 'track_id'] == hits.loc[index2, 'track_id'] and hits.loc[index1, 'pt'] >= pt_min and \
+                index1 == filtered_hits1['phi'].idxmin() and index2 == filtered_hits2['phi'].idxmin():
                     edge_lable = 1
                     filtered_track_segments.setdefault(hits.loc[index1, 'track_id'], set()).add((hits.loc[index1, 'row_id'], hits.loc[index2, 'row_id']))
                 G.add_edge(index1, index2, features=get_edge_features(G.nodes[index1]['pos'], G.nodes[index2]['pos']), label=edge_lable)
