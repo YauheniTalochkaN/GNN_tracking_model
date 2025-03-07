@@ -1,14 +1,14 @@
 input_dir: ./mpd_out/train_graphs
 output_dir: ./mpd_out/train_logs
 n_files: 1000
-section_num: 4
+section_num: 1
 test_size: 0.2
-epoch_num: 150
+epoch_num: 100
 batch_size: 1
 n_iters: 6
 learning_rate: 0.001
 step_size: 20
 gamma: 0.9
 pos_weight: 1
-neg_weight: 0.7
+neg_weight: 0.8
 time_lapse: 10
