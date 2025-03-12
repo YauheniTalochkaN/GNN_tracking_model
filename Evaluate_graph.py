@@ -83,7 +83,9 @@ def plot_graph(G, pred):
     widths = [2.0 if color == 'red' or 'green' else 1.5 for color in edge_colors]
     nx.draw_networkx_nodes(G, pos, node_color='black', node_size=2, alpha=1.0, ax=ax)
     nx.draw_networkx_edges(G, pos, edge_color=edge_colors, width=widths, alpha=edge_alpha, ax=ax, arrows=False) 
+    
     plt.show()
+    #plt.savefig("graph.png")
 
 def plot3D_networkx(G, pred, animate=False, only_true=False):
     
@@ -134,6 +136,7 @@ def plot3D_networkx(G, pred, animate=False, only_true=False):
     ax.set_title('', fontsize=16)
 
     plt.show()
+    #plt.savefig("graph3D.png")
 
     if animate:
         def animate(angle):
@@ -143,7 +146,7 @@ def plot3D_networkx(G, pred, animate=False, only_true=False):
         angle = np.linspace(0, 360, 240, endpoint=False)
         ani = FuncAnimation(fig, animate, angle, interval=150, blit=True)
 
-        ani.save('3D_graph_animation.gif', writer=PillowWriter(fps=30))
+        ani.save('graph3D_animation.gif', writer=PillowWriter(fps=30))
 
 def parse_args():
     parser = argparse.ArgumentParser('prepare.py')

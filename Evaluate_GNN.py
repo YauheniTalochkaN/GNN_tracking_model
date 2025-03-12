@@ -3,6 +3,7 @@
 import argparse
 import yaml
 import os
+import time
 from itertools import product
 import numpy as np
 import torch
@@ -20,6 +21,7 @@ def parse_args():
 
 # Evaluate metrics
 def evaluate(model, loader, device, thresholds):
+    start_time = time.time()
     model.eval()
     all_true_labels = []
     all_pred_labels = []
@@ -47,6 +49,8 @@ def evaluate(model, loader, device, thresholds):
 
         purities.append(purity)
         efficiencies.append(efficiency)
+
+    print(f"Spent time: {time.time() - start_time:.6f} s")
     
     return all_true_labels, all_pred_labels, purities, efficiencies
 
@@ -67,6 +71,7 @@ def plot_purity_and_efficiency(purities, efficiencies, thresholds):
     plt.tick_params(axis='both', which='major', labelsize=14)
     plt.legend(loc='lower center', fontsize=16)
     plt.show()
+    #plt.savefig("Metrics.png")
 
 def plot_ROC(fpr, tpr, roc_auc):
     # Plot ROC Curve
@@ -81,6 +86,7 @@ def plot_ROC(fpr, tpr, roc_auc):
     plt.tick_params(axis='both', which='major', labelsize=14)
     plt.title(f'ROC curve (AUC = {roc_auc:.3f})', fontsize=16)
     plt.show()
+    #plt.savefig("ROC.png")
 
 def plot_counts(fake_pred, true_pred):
     # Plot the first histogram with log scale
@@ -94,6 +100,7 @@ def plot_counts(fake_pred, true_pred):
     plt.tick_params(axis='both', which='major', labelsize=14)
     plt.legend(fontsize=16)
     plt.show()
+    #plt.savefig("Counts.png")
 
 def main():
     # Get args
