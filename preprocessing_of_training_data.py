@@ -15,7 +15,7 @@ def select_hits_for_training(hits, truth, tracks):
     r = np.sqrt(hits.x**2 + hits.y**2)
     phi = np.arctan2(hits.y, hits.x)
     truth = truth.merge(tracks[['track_id', 'pt']], on='track_id')
-    hits = hits[['hit_id', 'z', 'row_id']].assign(r=r, phi=phi).merge(truth, on='hit_id')
+    hits = hits[['hit_id', 'z', 'row_id', 'sector_id']].assign(r=r, phi=phi).merge(truth, on='hit_id')
 
     return hits
 
@@ -29,15 +29,12 @@ def split_detector_sections(hits, phi_edges, eta_edges):
         # Select hits in this phi section
         phi_hits = hits[(hits.phi > phi_min) & (hits.phi < phi_max)]
 
-        # Center these hits on phi=0
-        centered_phi = phi_hits.phi - (phi_min + phi_max) / 2
-        phi_hits = phi_hits.assign(phi=centered_phi, phi_section=i)
+        # Select hits in this eta section
         for j in range(len(eta_edges) - 1):
             eta_min, eta_max = eta_edges[j], eta_edges[j+1]
-            # Select hits in this eta section
             eta = calc_eta(phi_hits.r, phi_hits.z)
             sec_hits = phi_hits[(eta > eta_min) & (eta < eta_max)]
-            hits_sections.append(sec_hits.assign(eta_section=j))
+            hits_sections.append(sec_hits)
 
     return hits_sections
 
@@ -51,7 +48,7 @@ def calc_dphi_2(phi1, phi2):
     dphi = phi2 - phi1
     if dphi > np.pi:
         dphi -= 2*np.pi
-    if dphi < -np.pi:
+    elif dphi < -np.pi:
         dphi += 2*np.pi
     return dphi
 
@@ -202,11 +199,28 @@ def process_func(evtid, input_dir, output_dir, phi_edges, eta_edges, num_rows, n
             for idx, row in segments.iterrows():
                 index1 = row['index_1']
                 index2 = row['index_2']
+
                 edge_lable = 0
-                filtered_hits1 = hits[(hits['track_id'] == hits.loc[index1, 'track_id']) & (hits['row_id'] == hits.loc[index1, 'row_id'])]
-                filtered_hits2 = hits[(hits['track_id'] == hits.loc[index2, 'track_id']) & (hits['row_id'] == hits.loc[index2, 'row_id'])]
+
+                filtered_hits1 = hits[(hits['track_id'] == hits.loc[index1, 'track_id']) & 
+                                      (hits['row_id'] == hits.loc[index1, 'row_id']) & 
+                                      (hits['sector_id'] == hits.loc[index1, 'sector_id'])]
+                filtered_hits2 = hits[(hits['track_id'] == hits.loc[index2, 'track_id']) & 
+                                      (hits['row_id'] == hits.loc[index2, 'row_id']) & 
+                                      (hits['sector_id'] == hits.loc[index2, 'sector_id'])]
+
+                mean_z1 = filtered_hits1['z'].mean()
+                mean_r1 = filtered_hits1['r'].mean()
+
+                mean_z2 = filtered_hits2['z'].mean()
+                mean_r2 = filtered_hits2['r'].mean()
+
+                index1_min_deviation = ((filtered_hits1['z'] - mean_z1)**2 + (filtered_hits1['r'] - mean_r1)**2).idxmin()
+    
+                index2_min_deviation = ((filtered_hits2['z'] - mean_z2)**2 + (filtered_hits2['r'] - mean_r2)**2).idxmin()
+
                 if hits.loc[index1, 'track_id'] == hits.loc[index2, 'track_id'] and hits.loc[index1, 'pt'] >= pt_min and \
-                index1 == filtered_hits1['phi'].idxmin() and index2 == filtered_hits2['phi'].idxmin():
+                index1 == index1_min_deviation and index2 == index2_min_deviation:
                     edge_lable = 1
                     filtered_track_segments.setdefault(hits.loc[index1, 'track_id'], set()).add((hits.loc[index1, 'row_id'], hits.loc[index2, 'row_id']))
                 G.add_edge(index1, index2, features=get_edge_features(G.nodes[index1]['pos'], G.nodes[index2]['pos']), label=edge_lable)
