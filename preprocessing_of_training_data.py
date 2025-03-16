@@ -15,7 +15,7 @@ def select_hits_for_training(hits, truth, tracks):
     r = np.sqrt(hits.x**2 + hits.y**2)
     phi = np.arctan2(hits.y, hits.x)
     truth = truth.merge(tracks[['track_id', 'pt']], on='track_id')
-    hits = hits[['hit_id', 'z', 'row_id', 'sector_id']].assign(r=r, phi=phi).merge(truth, on='hit_id')
+    hits = hits[['hit_id', 'z', 'row_id']].assign(r=r, phi=phi).merge(truth, on='hit_id')
 
     return hits
 
@@ -82,41 +82,6 @@ def select_segments(hits1, hits2, dphi_max, z0_max, dtheta_max, d_min, d_max):
 
     return hit_pairs[['index_1', 'index_2']][good_seg_mask]
 
-""" def select_segments_2(hits1, hits2, dphi_max, z0_max, dtheta_max, d_min, d_max):
-    # Start with all possible pairs of hits
-    keys = ['evtid', 'r', 'phi', 'z', 'sector_id']
-    hit_pairs = hits1[keys].reset_index().merge(hits2[keys].reset_index(), on='evtid', suffixes=('_1', '_2'))
-
-    hit_pairs = hit_pairs[hit_pairs['sector_id_1'] != hit_pairs['sector_id_2']]
-    hit_pairs = hit_pairs.drop(columns=['sector_id_1', 'sector_id_2'])
-
-    # Compute line through the points
-    dphi = calc_dphi(hit_pairs.phi_1, hit_pairs.phi_2)
-    dz = hit_pairs.z_2 - hit_pairs.z_1
-    dr = hit_pairs.r_2 - hit_pairs.r_1
-    z0 = hit_pairs.z_1 - hit_pairs.r_1 * dz / dr
-    distance = np.sqrt(hit_pairs.r_1**2 + hit_pairs.r_2**2 - 2 * hit_pairs.r_1 * hit_pairs.r_2 * np.cos(dphi) + dz**2)
-    dtheta = np.arctan(dz / dr)
-
-    # Filter segments according to criteria
-    good_seg_mask = (
-        (dphi.abs() < dphi_max) &
-        (z0.abs() < z0_max) &
-        (dtheta.abs() < dtheta_max) &
-        (distance > d_min) & (distance < d_max)
-    )
-
-    return hit_pairs[['index_1', 'index_2']][good_seg_mask] """
-
-def get_pos(Gp):
-    pos = {}
-    for node in Gp.nodes():
-        r, phi, z = Gp.nodes[node]['pos'][:3]
-        x = r * np.cos(phi)
-        y = r * np.sin(phi)
-        pos[node] = np.array([x, y])
-    return pos
-
 def get_edge_features(in_node, out_node):
     # Calculate r, phi and z of input and output nodes
     in_r, in_phi, in_z    = in_node
@@ -150,6 +115,9 @@ def save_graph_to_npz(G, filename):
     
     # Get node positions
     node_pos = np.array([G.nodes[n]['pos'] for n in nodes])
+
+    # Get hit_ids of nodes
+    node_hit_id = np.array([G.nodes[n]['hit_id'] for n in nodes])
     
     # Get edge features and labels
     edge_features = []
@@ -169,6 +137,7 @@ def save_graph_to_npz(G, filename):
     np.savez(filename,
              nodes=nodes,
              node_pos=node_pos,
+             node_hit_id=node_hit_id,
              edges=edges,
              edge_features=edge_features,
              edge_labels=edge_labels)
@@ -199,7 +168,6 @@ def process_func(evtid, input_dir, output_dir, phi_edges, eta_edges, num_rows, n
         # Define adjacent rows
         l = np.arange(num_rows)
         row_pairs = np.stack([l[:-1], l[1:]], axis=1)
-        #row_pairs_2 = np.stack([l[:-2], l[2:]], axis=1)
 
         filtered_track_segments = dict()
 
@@ -208,7 +176,7 @@ def process_func(evtid, input_dir, output_dir, phi_edges, eta_edges, num_rows, n
             # Make graph
             G = nx.DiGraph()
             for idx, row in hits.iterrows():
-                G.add_node(idx, pos=row[['r', 'phi', 'z']].to_numpy() / node_feature_scale)
+                G.add_node(idx, pos=row[['r', 'phi', 'z']].to_numpy() / node_feature_scale, hit_id=row['hit_id'])
 
             # Take row groups
             row_groups = hits.groupby('row_id')
@@ -226,20 +194,6 @@ def process_func(evtid, input_dir, output_dir, phi_edges, eta_edges, num_rows, n
 
                 # Construct the segments
                 segments.append(select_segments(hits1, hits2, dphi_max, z0_max, dtheta_max, d_min, d_max))
-            
-            """ for (row1, row2) in row_pairs_2:
-                # Find and join all hit pairs
-                try:
-                    hits1 = row_groups.get_group(row1)
-                    hits2 = row_groups.get_group(row2)
-
-                # If an event has no hits on a row, we get a KeyError.
-                except KeyError as exc:
-                    logging.info(f'Skipping empty row: {exc}')
-                    continue
-
-                # Construct the segments
-                segments.append(select_segments_2(hits1, hits2, dphi_max, z0_max, dtheta_max, d_min, d_max)) """
 
             # Combine segments from all row pairs
             segments = pd.concat(segments)
