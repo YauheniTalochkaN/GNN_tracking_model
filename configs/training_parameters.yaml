@@ -5,10 +5,10 @@ section_num: 1
 test_size: 0.2
 epoch_num: 100
 batch_size: 1
-n_iters: 6
+n_iters: 8
 learning_rate: 0.001
 step_size: 20
 gamma: 0.9
 pos_weight: 1
-neg_weight: 0.8
+neg_weight: 0.65
 time_lapse: 10
