@@ -216,7 +216,6 @@ def process_func(evtid, input_dir, output_dir, phi_edges, eta_edges, num_rows, n
                 mean_r2 = filtered_hits2['r'].mean()
 
                 index1_min_deviation = ((filtered_hits1['z'] - mean_z1)**2 + (filtered_hits1['r'] - mean_r1)**2).idxmin()
-    
                 index2_min_deviation = ((filtered_hits2['z'] - mean_z2)**2 + (filtered_hits2['r'] - mean_r2)**2).idxmin()
 
                 if hits.loc[index1, 'track_id'] == hits.loc[index2, 'track_id'] and hits.loc[index1, 'pt'] >= pt_min and \
