@@ -3,9 +3,9 @@ output_dir: ./mpd_out/train_logs
 n_files: 1000
 section_num: 1
 test_size: 0.2
-epoch_num: 100
+epoch_num: 200
 batch_size: 1
-n_iters: 8
+n_iters: 6
 learning_rate: 0.001
 step_size: 20
 gamma: 0.9
