@@ -25,7 +25,7 @@ File contents:
 				vertex
 
 	contents of hits std::vector
-		[X Y Z Sector Row TimeBin nTracks TrackId MotherId Pt Pdg]
+		[X Y Z Sector Row TimeBin nTracks TrackId MotherId Pt]
 		X, Y, Z - hit global coordinates (cm)
 		Sector - sector number
 		Row - row number
@@ -34,8 +34,7 @@ File contents:
 		after that, nTracks group of 4 numbers:
 			TrackId - unique track id
 			MotherId - track id from which track was born (-1 for primary tracks)
-			Pt - pt momentum (GeV)
-			Pdg - particle pdg code
+			Pt - pt momentum (GeV) per q
 			
 	contents of vertex std::vector
 		X Y Z
@@ -68,7 +67,7 @@ void SaveHits(TDirectory* pDir, std::string name)
 
 			file_hits << "hit_id,x,y,z,sector_id,row_id\n";
 			file_truth << "hit_id,track_id\n";
-			file_tracks << "track_id,mother_id,pt,pdg\n";
+			file_tracks << "track_id,mother_id,pt\n";
 
 			std::unordered_set<size_t> processed_ids;
 
@@ -90,7 +89,7 @@ void SaveHits(TDirectory* pDir, std::string name)
 
 					if(processed_ids.find((*pVec)[i][k]) == processed_ids.end())
 					{
-						file_tracks << (*pVec)[i][k] << "," << (*pVec)[i][k+1] << "," << (*pVec)[i][k+2] << "," << (*pVec)[i][k+3] << "\n";
+						file_tracks << (*pVec)[i][k] << "," << (*pVec)[i][k+1] << "," << fabs((*pVec)[i][k+2]) << "\n";
 						
 						processed_ids.insert((*pVec)[i][k]);
 					} 
