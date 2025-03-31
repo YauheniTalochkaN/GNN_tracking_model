@@ -79,9 +79,9 @@ def plot_graph(G, pred):
                 edge_colors[iedge] = 'red'
     pos = get_pos(G) 
     plt.close('all')
-    fig, ax = plt.subplots(figsize=(10, 10), constrained_layout=True)
+    fig, ax = plt.subplots(figsize=(8, 8), constrained_layout=True)
     widths = [2.0 if color == 'red' or 'green' else 1.5 for color in edge_colors]
-    nx.draw_networkx_nodes(G, pos, node_color='black', node_size=2, alpha=1.0, ax=ax)
+    nx.draw_networkx_nodes(G, pos, node_color='black', node_size=0.2, alpha=1.0, ax=ax)
     nx.draw_networkx_edges(G, pos, edge_color=edge_colors, width=widths, alpha=edge_alpha, ax=ax, arrows=False) 
     
     plt.show()
@@ -97,10 +97,10 @@ def plot3D_networkx(G, pred, animate=False, only_true=False):
 
     plt.close('all')
 
-    fig = plt.figure(figsize=(13, 13))
+    fig = plt.figure(figsize=(8, 8))
     ax = fig.add_subplot(111, projection='3d')
 
-    ax.scatter(x, y, z, s=2, c='black')
+    ax.scatter(x, y, z, s=0.2, c='black')
 
     for iedge,edge in enumerate(G.edges(data=True)):
         p1 = G.nodes[edge[0]]['pos'][:3]
@@ -130,10 +130,10 @@ def plot3D_networkx(G, pred, animate=False, only_true=False):
                     [p1[2], p2[2]], color=col, linewidth=linewidth, alpha=alpha)
 
     ax.tick_params(axis='both', which='major', labelsize=14)
-    ax.set_xlabel('X', fontsize=16)
-    ax.set_ylabel('Y', fontsize=16)
-    ax.set_zlabel('Z', fontsize=16)
-    ax.set_title('', fontsize=16)
+    ax.set_xlabel('X', fontsize=14)
+    ax.set_ylabel('Y', fontsize=14)
+    ax.set_zlabel('Z', fontsize=14)
+    ax.set_title('', fontsize=14)
 
     plt.show()
     #plt.savefig("graph3D.png")
