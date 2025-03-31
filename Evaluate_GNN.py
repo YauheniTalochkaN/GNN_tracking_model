@@ -67,8 +67,15 @@ def plot_purity_and_efficiency(purities, efficiencies, thresholds):
     plt.ylim([-0.02, 1.02])
     plt.xlabel('Cut on model score', fontsize=16)
     plt.ylabel('Metrics', fontsize=16)
-    plt.tick_params(axis='both', which='major', labelsize=14)
-    plt.legend(loc='lower center', fontsize=16)
+    plt.tick_params(axis='both', 
+                    which='major', 
+                    labelsize=14,
+                    top=True,
+                    bottom=True,
+                    left=True,
+                    right=True,
+                    direction='in')
+    plt.legend(loc='center', fontsize=16)
     plt.show()
     #plt.savefig("Metrics.png")
 
@@ -82,7 +89,14 @@ def plot_ROC(fpr, tpr, roc_auc):
     plt.ylim([-0.02, 1.02])
     plt.xlabel('False Positive Rate', fontsize=16)
     plt.ylabel('True Positive Rate', fontsize=16)
-    plt.tick_params(axis='both', which='major', labelsize=14)
+    plt.tick_params(axis='both', 
+                    which='major', 
+                    labelsize=14,
+                    top=True,
+                    bottom=True,
+                    left=True,
+                    right=True,
+                    direction='in')
     plt.title(f'ROC curve (AUC = {roc_auc:.3f})', fontsize=16)
     plt.show()
     #plt.savefig("ROC.png")
@@ -94,10 +108,21 @@ def plot_counts(fake_pred, true_pred):
     plt.hist(fake_pred, bins=100, alpha=1, label='fake', log=True, histtype='step', color='orange')
     plt.hist(true_pred, bins=100, alpha=1, label='true', log=True, histtype='step', color='blue')
     plt.xlim([-0.02, 1.02])
+    #plt.ylim([1e2, 1e7])
     plt.xlabel('Model output', fontsize=16)
     plt.ylabel('Counts', fontsize=16)
-    plt.tick_params(axis='both', which='major', labelsize=14)
-    plt.legend(fontsize=16)
+    plt.tick_params(axis='both', 
+                    which='major', 
+                    labelsize=14,
+                    top=True,
+                    bottom=True,
+                    left=True,
+                    right=True,
+                    direction='in')
+    plt.tick_params(axis='y',          
+                    which='minor', 
+                    left=False )
+    plt.legend(fontsize=16, loc='upper center')
     plt.show()
     #plt.savefig("Counts.png")
 
