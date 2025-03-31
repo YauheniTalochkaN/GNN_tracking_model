@@ -57,7 +57,7 @@ def evaluate(model, loader, device, thresholds):
 def plot_purity_and_efficiency(purities, efficiencies, thresholds):
     # Plot Purity and Efficiency
     plt.close('all')
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(7, 5))
     if thresholds[-1] >= 1:
         plt.plot(thresholds[:-1], purities[:-1], alpha=1, label='Purity', color='blue')
     else: 
@@ -65,9 +65,8 @@ def plot_purity_and_efficiency(purities, efficiencies, thresholds):
     plt.plot(thresholds, efficiencies, alpha=1, label='Efficiency', color='orange')
     plt.xlim([-0.02, 1.02])
     plt.ylim([-0.02, 1.02])
-    plt.title('Purity and Efficiency', fontsize=16)
     plt.xlabel('Cut on model score', fontsize=16)
-    plt.ylabel('Value', fontsize=16)
+    plt.ylabel('Metrics', fontsize=16)
     plt.tick_params(axis='both', which='major', labelsize=14)
     plt.legend(loc='lower center', fontsize=16)
     plt.show()
@@ -76,7 +75,7 @@ def plot_purity_and_efficiency(purities, efficiencies, thresholds):
 def plot_ROC(fpr, tpr, roc_auc):
     # Plot ROC Curve
     plt.close('all')
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(7, 5))
     plt.plot(fpr, tpr, color='orange', alpha=1)
     plt.plot([0, 1], [0, 1], color='blue', alpha=1, linestyle='--')
     plt.xlim([-0.02, 1.02])
@@ -91,7 +90,7 @@ def plot_ROC(fpr, tpr, roc_auc):
 def plot_counts(fake_pred, true_pred):
     # Plot the first histogram with log scale
     plt.close('all')
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(7, 5))
     plt.hist(fake_pred, bins=100, alpha=1, label='fake', log=True, histtype='step', color='orange')
     plt.hist(true_pred, bins=100, alpha=1, label='true', log=True, histtype='step', color='blue')
     plt.xlim([-0.02, 1.02])
