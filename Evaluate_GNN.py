@@ -27,6 +27,7 @@ def evaluate(model, loader, device, thresholds):
     all_pred_labels = []
     purities = []
     efficiencies = []
+    accuracies = []
     
     with torch.no_grad():
         for data in loader:
@@ -41,20 +42,23 @@ def evaluate(model, loader, device, thresholds):
     for threshold in thresholds:
         binary_preds = (all_pred_labels >= threshold).astype(int)
         true_positive = np.sum((binary_preds == 1) & (all_true_labels == 1))
+        true_negative = np.sum((binary_preds == 0) & (all_true_labels == 0))
         false_positive = np.sum((binary_preds == 1) & (all_true_labels == 0))
         false_negative = np.sum((binary_preds == 0) & (all_true_labels == 1))
 
         purity = true_positive / (true_positive + false_positive) if (true_positive + false_positive) > 0 else 0
         efficiency = true_positive / (true_positive + false_negative) if (true_positive + false_negative) > 0 else 0
+        accuracy = (true_positive + true_negative) / (true_positive + true_negative + false_positive + false_negative)
 
         purities.append(purity)
         efficiencies.append(efficiency)
+        accuracies.append(accuracy)
 
     print(f"Spent time: {time.time() - start_time:.6f} s")
     
-    return all_true_labels, all_pred_labels, purities, efficiencies
+    return all_true_labels, all_pred_labels, purities, efficiencies, accuracies
 
-def plot_purity_and_efficiency(purities, efficiencies, thresholds):
+def plot_purity_and_efficiency(purities, efficiencies, accuracies, thresholds):
     # Plot Purity and Efficiency
     plt.close('all')
     plt.figure(figsize=(7, 5))
@@ -63,6 +67,7 @@ def plot_purity_and_efficiency(purities, efficiencies, thresholds):
     else: 
         plt.plot(thresholds, purities, alpha=1, label='Purity', color='blue')
     plt.plot(thresholds, efficiencies, alpha=1, label='Efficiency', color='orange')
+    plt.plot(thresholds, accuracies, alpha=1, label='Accuracy', color='red')
     plt.xlim([-0.02, 1.02])
     plt.ylim([-0.02, 1.02])
     plt.xlabel('Cut on model score', fontsize=16)
@@ -177,8 +182,8 @@ def main():
 
     # Evaluate model
     thresholds = np.linspace(0, 1, 1000)
-    all_true_labels, all_pred_labels, purities, efficiencies = evaluate(model, test_loader, device, thresholds)
-    plot_purity_and_efficiency(purities, efficiencies, thresholds)
+    all_true_labels, all_pred_labels, purities, efficiencies, accuracies = evaluate(model, test_loader, device, thresholds)
+    plot_purity_and_efficiency(purities, efficiencies, accuracies, thresholds)
 
     # Calculate ROC Curve and AUC
     fpr, tpr, _ = roc_curve(all_true_labels, all_pred_labels)
