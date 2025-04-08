@@ -3,7 +3,6 @@
 import argparse
 import yaml
 import os
-import time
 from itertools import product
 import numpy as np
 import torch
@@ -21,7 +20,6 @@ def parse_args():
 
 # Evaluate metrics
 def evaluate(model, loader, device, thresholds):
-    start_time = time.time()
     model.eval()
     all_true_labels = []
     all_pred_labels = []
@@ -53,8 +51,6 @@ def evaluate(model, loader, device, thresholds):
         purities.append(purity)
         efficiencies.append(efficiency)
         accuracies.append(accuracy)
-
-    print(f"Spent time: {time.time() - start_time:.6f} s")
     
     return all_true_labels, all_pred_labels, purities, efficiencies, accuracies
 
