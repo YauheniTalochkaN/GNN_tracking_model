@@ -56,6 +56,10 @@ def evaluate(model, loader, device, thresholds):
 
 def plot_purity_and_efficiency(purities, efficiencies, accuracies, thresholds):
     # Plot Purity and Efficiency
+    purities = [x * 100 for x in purities]
+    efficiencies = [x * 100 for x in efficiencies]
+    accuracies = [x * 100 for x in accuracies]
+
     plt.close('all')
     plt.figure(figsize=(7, 5))
     if thresholds[-1] >= 1:
@@ -63,11 +67,11 @@ def plot_purity_and_efficiency(purities, efficiencies, accuracies, thresholds):
     else: 
         plt.plot(thresholds, purities, alpha=1, label='Purity', color='blue')
     plt.plot(thresholds, efficiencies, alpha=1, label='Efficiency', color='orange')
-    plt.plot(thresholds, accuracies, alpha=1, label='Accuracy', color='red')
+    #plt.plot(thresholds, accuracies, alpha=1, label='Accuracy', color='red')
     plt.xlim([-0.02, 1.02])
-    plt.ylim([-0.02, 1.02])
+    plt.ylim([-2, 102])
     plt.xlabel('Cut on model score', fontsize=16)
-    plt.ylabel('Metrics', fontsize=16)
+    plt.ylabel('Metrics (%)', fontsize=16)
     plt.tick_params(axis='both', 
                     which='major', 
                     labelsize=14,
