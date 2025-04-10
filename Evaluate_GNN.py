@@ -59,77 +59,82 @@ def plot_purity_and_efficiency(purities, efficiencies, accuracies, thresholds):
     purities = [x * 100 for x in purities]
     efficiencies = [x * 100 for x in efficiencies]
     accuracies = [x * 100 for x in accuracies]
-
-    plt.close('all')
-    plt.figure(figsize=(7, 5))
-    if thresholds[-1] >= 1:
-        plt.plot(thresholds[:-1], purities[:-1], alpha=1, label='Purity', color='blue')
-    else: 
-        plt.plot(thresholds, purities, alpha=1, label='Purity', color='blue')
-    plt.plot(thresholds, efficiencies, alpha=1, label='Efficiency', color='orange')
-    plt.plot(thresholds, accuracies, alpha=1, label='Accuracy', color='red')
-    plt.xlim([-0.02, 1.02])
-    plt.ylim([-2, 102])
-    plt.xlabel('Cut on model score', fontsize=16)
-    plt.ylabel('Metrics (%)', fontsize=16)
-    plt.tick_params(axis='both', 
-                    which='major', 
-                    labelsize=14,
-                    top=True,
-                    bottom=True,
-                    left=True,
-                    right=True,
-                    direction='in')
-    plt.legend(loc='center', fontsize=16)
-    plt.show()
-    #plt.savefig("Metrics.png")
+    with plt.rc_context({'font.family': 'Nimbus Roman'}):
+        plt.close('all')
+        plt.figure(figsize=(7, 5))
+        if thresholds[-1] >= 1:
+            plt.plot(thresholds[:-1], purities[:-1], alpha=1, label='Purity', color='blue')
+        else: 
+            plt.plot(thresholds, purities, alpha=1, label='Purity', color='blue')
+        plt.plot(thresholds, efficiencies, alpha=1, label='Efficiency', color='orange')
+        #plt.plot(thresholds, accuracies, alpha=1, label='Accuracy', color='red')
+        plt.xlim([-0.02, 1.02])
+        plt.ylim([-2, 102])
+        plt.xlabel('Cut on model score', fontsize=20)
+        plt.ylabel('Metrics (%)', fontsize=20)
+        plt.tick_params(axis='both', 
+                        which='major', 
+                        labelsize=18,
+                        top=True,
+                        bottom=True,
+                        left=True,
+                        right=True,
+                        direction='in')
+        plt.legend(loc='center', fontsize=18)
+        plt.tight_layout()
+        plt.show()
+        #plt.savefig("Metrics.png")
 
 def plot_ROC(fpr, tpr, roc_auc):
     # Plot ROC Curve
-    plt.close('all')
-    plt.figure(figsize=(7, 5))
-    plt.plot(fpr, tpr, color='orange', alpha=1)
-    plt.plot([0, 1], [0, 1], color='blue', alpha=1, linestyle='--')
-    plt.xlim([-0.02, 1.02])
-    plt.ylim([-0.02, 1.02])
-    plt.xlabel('False Positive Rate', fontsize=16)
-    plt.ylabel('True Positive Rate', fontsize=16)
-    plt.tick_params(axis='both', 
-                    which='major', 
-                    labelsize=14,
-                    top=True,
-                    bottom=True,
-                    left=True,
-                    right=True,
-                    direction='in')
-    plt.title(f'ROC curve (AUC = {roc_auc:.3f})', fontsize=16)
-    plt.show()
-    #plt.savefig("ROC.png")
+    with plt.rc_context({'font.family': 'Nimbus Roman'}):
+        plt.close('all')
+        plt.figure(figsize=(7, 5))
+        plt.plot(fpr, tpr, color='orange', alpha=1)
+        plt.plot([0, 1], [0, 1], color='blue', alpha=1, linestyle='--')
+        plt.xlim([-0.02, 1.02])
+        plt.ylim([-0.02, 1.02])
+        plt.xlabel('False Positive Rate', fontsize=20)
+        plt.ylabel('True Positive Rate', fontsize=20)
+        plt.tick_params(axis='both', 
+                        which='major', 
+                        labelsize=18,
+                        top=True,
+                        bottom=True,
+                        left=True,
+                        right=True,
+                        direction='in')
+        plt.title(f'ROC curve (AUC = {roc_auc:.3f})', fontsize=18)
+        plt.tight_layout()
+        plt.show()
+        #plt.savefig("ROC.png")
 
 def plot_counts(fake_pred, true_pred):
     # Plot the first histogram with log scale
-    plt.close('all')
-    plt.figure(figsize=(7, 5))
-    plt.hist(fake_pred, bins=100, alpha=1, label='fake', log=True, histtype='step', color='orange')
-    plt.hist(true_pred, bins=100, alpha=1, label='true', log=True, histtype='step', color='blue')
-    plt.xlim([-0.02, 1.02])
-    #plt.ylim([1e2, 1e7])
-    plt.xlabel('Model output', fontsize=16)
-    plt.ylabel('Counts', fontsize=16)
-    plt.tick_params(axis='both', 
-                    which='major', 
-                    labelsize=14,
-                    top=True,
-                    bottom=True,
-                    left=True,
-                    right=True,
-                    direction='in')
-    plt.tick_params(axis='y',          
-                    which='minor', 
-                    left=False )
-    plt.legend(fontsize=16, loc='upper center')
-    plt.show()
-    #plt.savefig("Counts.png")
+    with plt.rc_context({'font.family': 'Nimbus Roman'}):
+        plt.close('all')
+        plt.figure(figsize=(7, 5))
+        plt.hist(fake_pred, bins=100, alpha=1, label='fake', log=True, histtype='step', color='orange')
+        plt.hist(true_pred, bins=100, alpha=1, label='true', log=True, histtype='step', color='blue')
+        plt.xlim([-0.02, 1.02])
+        #plt.ylim([1e2, 1e7])
+        plt.xlabel('Model output', fontsize=20)
+        plt.ylabel('Counts', fontsize=20)
+        plt.tick_params(axis='both', 
+                        which='major', 
+                        labelsize=18,
+                        top=True,
+                        bottom=True,
+                        left=True,
+                        right=True,
+                        direction='in')
+        plt.tick_params(axis='y',          
+                        which='minor', 
+                        left=False )
+        plt.legend(fontsize=18, loc='upper center')
+        plt.tight_layout()
+        plt.show()
+        #plt.savefig("Counts.png")
 
 def main():
     # Get args
