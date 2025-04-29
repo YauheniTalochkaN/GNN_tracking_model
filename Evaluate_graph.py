@@ -73,7 +73,7 @@ def plot_graph(G, pred):
                 edge_alpha[iedge] = 0.3
             else:
                 edge_colors[iedge] = 'indigo'
-                edge_alpha[iedge] = 0.5
+                edge_alpha[iedge] = 1
         else:
             if int(edge[2]['label']) != int(pred[iedge]):
                 edge_colors[iedge] = 'red'
