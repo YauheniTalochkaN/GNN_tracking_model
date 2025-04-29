@@ -65,7 +65,7 @@ def evaluate(model, loader, device, threshold=0.5):
 def plot_graph(G, pred):
     n_edges = len(G.edges())
     edge_colors = ['green']*n_edges
-    edge_alpha = [1.]*n_edges
+    edge_alpha = [1]*n_edges
     for iedge,edge in enumerate(G.edges(data=True)):
         if int(edge[2]['label']) != 1:
             if int(edge[2]['label']) == int(pred[iedge]):
@@ -73,14 +73,13 @@ def plot_graph(G, pred):
                 edge_alpha[iedge] = 0.3
             else:
                 edge_colors[iedge] = 'indigo'
-                edge_alpha[iedge] = 1
         else:
             if int(edge[2]['label']) != int(pred[iedge]):
                 edge_colors[iedge] = 'red'
     pos = get_pos(G) 
     plt.close('all')
     fig, ax = plt.subplots(figsize=(8, 8), constrained_layout=True)
-    widths = [2.0 if color == 'red' or 'green' else 1.5 for color in edge_colors]
+    widths = [(2.2 if color == 'indigo' else 2.0) if color != 'grey' else 1.5 for color in edge_colors]
     nx.draw_networkx_nodes(G, pos, node_color='black', node_size=0.2, alpha=1.0, ax=ax)
     nx.draw_networkx_edges(G, pos, edge_color=edge_colors, width=widths, alpha=edge_alpha, ax=ax, arrows=False) 
     
