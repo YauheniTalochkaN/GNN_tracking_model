@@ -6,4 +6,3 @@ matplotlib
 torch
 torch-geometric
 scikit-learn
-seaborn
